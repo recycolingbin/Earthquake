@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SeismoSafe</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="landing">
+  <div id="noise-bg-frame" aria-hidden="true">
+    <iframe src="noise-background.html" title="Background visualizer" scrolling="no"></iframe>
+  </div>
+
+  <header>
+    <div class="brand"></div>
+    <nav class="nav-top" aria-label="Page navigation">
+      <a class="nav-link" href="#home" data-tab-target="home">Home</a>
+      <a class="nav-link" href="#terrain" data-tab-target="terrain">Terrain</a>
+      <a class="nav-link" href="#building" data-tab-target="building">Building_Risk</a>
+      <a class="nav-link" href="#instructions" data-tab-target="instructions">Instructions</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card tab-panel home-panel" data-tab="home" id="home">
+      <h2>SeismoSafe</h2>
+      <p class="sub">Terrain upload, simple building model, SAP2000 export, and risk score.</p>
+      <div class="button-row" style="justify-content: flex-end; gap: 0.8rem;">
+        <a class="primary" href="#terrain" data-tab-target="terrain">Start with Terrain</a>
+        <a class="primary" href="#building" data-tab-target="building">Go to Building</a>
+      </div>
+    </section>
+
+    <section class="card tab-panel terrain-panel" data-tab="terrain" id="terrain">
+      <div class="section-header">
+        <div class="pill">Step 1</div>
+        <div>
+          <h2>Terrain + live 3D base</h2>
+          <p class="subtle">Upload your DEM/DXF, set a slope hint, and watch the building sit on the ground plane instantly.</p>
+        </div>
+        <div class="pill pill-accent">Live preview</div>
+      </div>
+
+      <div class="terrain-grid">
+        <div class="mini-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">Upload</div>
+            <span class="eyebrow">Terrain factor</span>
+          </div>
+          <h3>DEM / terrain file</h3>
+          <p class="subtle">Drag a GeoTIFF/DEM file (.tif/.tiff) and we'll derive a slope factor.</p>
+          
+          <!-- Drop Zone -->
+          <div id="dem-dropzone" class="dropzone">
+            <div class="dropzone-content">
+              <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p class="dropzone-text">Drag & drop GeoTIFF here</p>
+              <p class="dropzone-hint">or click to browse (.tif / .tiff only)</p>
+            </div>
+            <input type="file" id="terrain-file" accept=".tif,.tiff" hidden />
+          </div>
+          <div id="dem-file-info" class="file-info" style="display: none;">
+            <span class="file-name"></span>
+            <button type="button" class="file-remove" title="Remove file">&times;</button>
+          </div>
+          <div id="dem-error" class="dropzone-error" style="display: none;"></div>
+          
+          <form id="terrain-form" class="stacked-form">
+            <label>Slope hint (degrees)
+              <input type="number" id="slope-hint" value="8" step="0.1" />
+            </label>
+            <button type="submit">Upload & compute slope factor</button>
+          </form>
+          
+          <div id="slope-result" class="slope-result" style="display: none;">
+            <div class="slope-value">
+              <span class="slope-label">Derived Slope:</span>
+              <span class="slope-degrees">--</span>
+            </div>
+            <div class="slope-bar">
+              <div class="slope-bar-fill"></div>
+            </div>
+            <span class="slope-category"></span>
+          </div>
+          
+          <div class="hint-row">
+            <span class="dot dot-blue"></span> Gentle = 0–10°
+            <span class="dot dot-amber"></span> Medium = 10–20°
+            <span class="dot dot-red"></span> Steep &gt; 20°
+          </div>
+        </div>
+
+        <div class="mini-card" id="terrain-3d-block">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">3D massing</div>
+            <span class="eyebrow">Box on sloped ground</span>
+          </div>
+          <div id="preview-container">
+            <div id="preview-canvas"></div>
+            <div id="preview-status" aria-live="polite"></div>
+          </div>
+          <div class="legend">
+            <span><span class="legend-dot blue"></span>Ground plane (slope)</span>
+            <span><span class="legend-dot orange"></span>Building mass</span>
+          </div>
+          <p class="microcopy">Use the Building tab to tweak bays, stories, and story height—preview refreshes live.</p>
+        </div>
+
+        <div class="mini-card mini-instructions">
+          <div class="pill pill-ghost">How-to</div>
+          <h3>Terrain workflow</h3>
+          <ol class="step-list">
+            <li><strong>Drop your DEM</strong> or test file and click Upload.</li>
+            <li><strong>Adjust slope hint</strong> if the site is steeper than average.</li>
+            <li><strong>Jump to Building</strong> and set stories/bays—3D updates in this tab.</li>
+            <li><strong>Review read-out</strong> below for slope factor + metadata.</li>
+          </ol>
+          <div class="callout">Tip: keep slope realistic; the risk score uses it directly.</div>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost">Read-out</div>
+          <span class="eyebrow">Backend response</span>
+        </div>
+        <pre id="terrain-result" class="result"></pre>
+      </div>
+    </section>
+
+    <section class="card tab-panel" data-tab="building" id="building">
+      <div class="section-header">
+        <div class="pill">Step 2</div>
+        <div>
+          <h2>Building &amp; risk</h2>
+          <p class="subtle">Set massing parameters and site data; run the quick risk check or export SAP2000.</p>
+        </div>
+        <div class="pill pill-accent">Analysis</div>
+      </div>
+
+      <div class="form-grid">
+        <div class="mini-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">Massing</div>
+            <span class="eyebrow">Geometry</span>
+          </div>
+          <form id="building-form" class="stacked-form">
+            <label>Name <input type="text" id="b-name" value="Concept Model" /></label>
+            <div class="two-col">
+              <label>Stories <input type="number" id="b-stories" value="5" min="1" /></label>
+              <label>Story height (m) <input type="number" id="b-storyh" value="3.2" step="0.1" min="0.1" /></label>
+            </div>
+            <div class="two-col">
+              <label>Bay width (m) <input type="number" id="b-bayw" value="6" step="0.1" min="0.1" /></label>
+              <label>Bay depth (m) <input type="number" id="b-bayd" value="6" step="0.1" min="0.1" /></label>
+            </div>
+            <label>Material
+              <select id="b-material">
+                <option value="RC">RC</option>
+                <option value="Steel">Steel</option>
+              </select>
+            </label>
+            <label>Importance factor <input type="number" id="b-importance" value="1.0" step="0.1" min="0.1" /></label>
+          </form>
+        </div>
+
+        <div class="mini-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">Site</div>
+            <span class="eyebrow">Hazard inputs</span>
+          </div>
+          <div class="stacked-form">
+            <label>Site class
+              <select id="s-siteclass">
+                <option value="C">C</option>
+                <option value="D" selected>D</option>
+                <option value="E">E</option>
+              </select>
+            </label>
+            <div class="two-col">
+              <label>Slope (degrees) <input type="number" id="s-slope" value="8" step="0.1" min="0" /></label>
+              <label>PGA (g) <input type="number" id="s-pga" value="0.25" step="0.01" min="0" /></label>
+            </div>
+            <label>Seismic zone <input type="text" id="s-zone" placeholder="Optional" /></label>
+            <div class="callout callout-soft">Uses same slope as terrain—keep it in sync.</div>
+          </div>
+        </div>
+
+        <div class="mini-card actions-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">Actions</div>
+            <span class="eyebrow">Compute / export</span>
+          </div>
+          <div class="stacked-buttons">
+            <button type="button" id="risk-btn">Compute risk score</button>
+            <button type="button" id="sap-btn">Export SAP2000 .s2k</button>
+          </div>
+          <p class="microcopy">Risk/export use both massing and site inputs.</p>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost">Risk output</div>
+          <span class="eyebrow">Backend response</span>
+        </div>
+        <pre id="risk-result" class="result"></pre>
+      </div>
+    </section>
+
+    <section class="card instructions-card tab-panel" data-tab="instructions" id="instructions">
+      <div class="section-header">
+        <div class="pill">Step 3</div>
+        <div>
+          <h2>Instructions</h2>
+          <p class="subtle">Follow the quick playbook to go from terrain to risk in under a minute.</p>
+        </div>
+        <div class="pill pill-accent">Cheat sheet</div>
+      </div>
+
+      <div class="instruction-grid">
+        <div class="mini-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">Flow</div>
+            <span class="eyebrow">End-to-end</span>
+          </div>
+          <ol class="step-list">
+            <li><strong>Terrain + 3D:</strong> upload DEM/DXF, set slope hint, and check the live massing card.</li>
+            <li><strong>Building:</strong> set stories, bay sizes, material, importance; keep slope consistent.</li>
+            <li><strong>Analyze:</strong> click "Compute risk score" or export SAP2000 <code>.s2k</code>.</li>
+          </ol>
+          <div class="callout">Tip: slope drives both terrain factor and risk score—match it across tabs.</div>
+        </div>
+
+        <div class="mini-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">Run locally</div>
+            <span class="eyebrow">Dev</span>
+          </div>
+          <ul class="bullet-list">
+            <li><strong>Backend:</strong> <code>uvicorn app.main:app --reload --port 8000</code> (from <code>backend</code>).</li>
+            <li><strong>Frontend:</strong> <code>python -m http.server 5173</code> (from <code>frontend</code>), then open <code>http://localhost:5173/</code>.</li>
+          </ul>
+          <p class="microcopy">You can also open <code>index.html</code> directly for a quick static preview.</p>
+        </div>
+
+        <div class="mini-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">Outputs</div>
+            <span class="eyebrow">What you get</span>
+          </div>
+          <ul class="bullet-list">
+            <li>Terrain slope factor from the upload endpoint.</li>
+            <li>Risk JSON for the current massing + site.</li>
+            <li>SAP2000 starter file (<code>.s2k</code>) for concept export.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="lib/three.min.js"></script>
+  <script src="lib/OrbitControls.js"></script>
+  <script src="lib/GLTFLoader.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
