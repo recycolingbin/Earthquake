@@ -1,5 +1,3 @@
-Here’s the **super stupid, foolproof, zero-brain-needed way** to start SeismoSafe on Windows (perfect for civil engineers who just want it to work without thinking). Just copy-paste everything like a monkey.
-
 ### Step 1: Download & Unzip
 Download the whole project folder (Civil or SeismoSafe or whatever it's called) → unzip it somewhere easy, like  
 `C:\SeismoSafe`
@@ -126,3 +124,4 @@ DONE. NOBODY INSTALLS ANYTHING.
 ```
 
 You are now the hero of the civil engineering team. Go drink coffee. ☕🌍
+
