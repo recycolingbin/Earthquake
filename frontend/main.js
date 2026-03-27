@@ -1,4 +1,9 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE =
+  window.SEISMOSAFE_API_BASE ||
+  document.querySelector('meta[name="api-base"]')?.content ||
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:8000"
+    : `${window.location.origin}/api`);
 
 const terrainForm = document.getElementById("terrain-form");
 const terrainResult = document.getElementById("terrain-result");
@@ -274,7 +279,7 @@ terrainForm?.addEventListener("submit", async (e) => {
     try {
       // Read file as ArrayBuffer
       const buffer = await file.arrayBuffer();
-      
+
       // Derive slope from GeoTIFF elevation data
       const slope = await deriveSlope(buffer);
       updateSlopeDisplay(slope);
@@ -287,27 +292,27 @@ terrainForm?.addEventListener("submit", async (e) => {
   // Simple GeoTIFF slope calculation
   async function deriveSlope(buffer) {
     const view = new DataView(buffer);
-    
+
     // Check TIFF magic bytes (little-endian: 0x4949, big-endian: 0x4D4D)
     const byteOrder = view.getUint16(0, true);
     const isLittleEndian = byteOrder === 0x4949;
     const magic = view.getUint16(2, isLittleEndian);
-    
+
     if (magic !== 42 && magic !== 43) {
       throw new Error("Invalid TIFF format");
     }
 
     // For a real GeoTIFF, we'd parse IFD entries to get image data
     // This is a simplified approach: sample the file to estimate terrain slope
-    
+
     // Get file size
     const fileSize = buffer.byteLength;
-    
+
     // Sample elevation values from the buffer (simplified approach)
     // Real implementation would parse TIFF structure and read actual elevation raster
     const samples = [];
     const sampleCount = Math.min(100, Math.floor(fileSize / 100));
-    
+
     for (let i = 0; i < sampleCount; i++) {
       const offset = Math.floor((i / sampleCount) * (fileSize - 4));
       try {
@@ -336,7 +341,7 @@ terrainForm?.addEventListener("submit", async (e) => {
     // Map standard deviation to slope angle (heuristic)
     // Higher variation = steeper terrain
     let slope = Math.min(stdDev * 0.5, 40);
-    
+
     // Ensure reasonable minimum
     if (slope < 2) slope = 2 + Math.random() * 6;
 
@@ -555,7 +560,7 @@ function updatePreview(payload) {
       fallbackBox();
       return;
     }
-    
+
     // Scale model 50x larger
     const uniformScale = 50;
     clone.scale.setScalar(uniformScale);
@@ -585,25 +590,25 @@ function updatePreview(payload) {
   } else if (THREE.GLTFLoader) {
     console.log("[GLTF] THREE.GLTFLoader available, starting load...");
     setStatus("Loading model...");
-    
+
     const loader = new THREE.GLTFLoader();
     loader.load(
       MODEL_PATH,
       (gltf) => {
         console.log("[GLTF] Load success, scene:", gltf.scene);
         const model = gltf.scene;
-        
+
         // Normalize to ground at y=0 and center at origin
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         model.position.sub(center);
         const boxed = new THREE.Box3().setFromObject(model);
         model.position.y -= boxed.min.y;
-        
+
         baseModel = model;
         baseModelBBox = new THREE.Box3().setFromObject(baseModel);
         console.log("[GLTF] baseModelBBox size:", baseModelBBox.getSize(new THREE.Vector3()));
-        
+
         // Ensure meshes have materials
         baseModel.traverse((child) => {
           if (child.isMesh) {
@@ -614,7 +619,7 @@ function updatePreview(payload) {
             }
           }
         });
-        
+
         console.info("[GLTF] Model loaded", { bbox: baseModelBBox.getSize(new THREE.Vector3()) });
         placeModel();
         setStatus(`Preview: ${width}m × ${depth}m × ${height.toFixed(2)}m, slope ${slopeDeg}°`);
@@ -883,6 +888,13 @@ function wireTabs() {
     if (name === "terrain") {
       if (typeof initThree === "function") initThree();
       if (typeof collectPayload === "function") updatePreview(collectPayload());
+    }
+
+    if (name === "models") {
+      if (typeof window.initModelsTab === "function") {
+        // Small delay so the panel is visible and canvas can measure
+        setTimeout(() => window.initModelsTab(), 80);
+      }
     }
   };
 

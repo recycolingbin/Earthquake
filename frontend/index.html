@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="api-base" content="" />
   <title>SeismoSafe</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body class="landing">
   <div id="noise-bg-frame" aria-hidden="true">
     <iframe src="noise-background.html" title="Background visualizer" scrolling="no"></iframe>
@@ -17,6 +20,7 @@
       <a class="nav-link" href="#home" data-tab-target="home">Home</a>
       <a class="nav-link" href="#terrain" data-tab-target="terrain">Terrain</a>
       <a class="nav-link" href="#building" data-tab-target="building">Building_Risk</a>
+      <a class="nav-link" href="#models" data-tab-target="models">Models</a>
       <a class="nav-link" href="#instructions" data-tab-target="instructions">Instructions</a>
     </nav>
   </header>
@@ -28,6 +32,7 @@
       <div class="button-row" style="justify-content: flex-end; gap: 0.8rem;">
         <a class="primary" href="#terrain" data-tab-target="terrain">Start with Terrain</a>
         <a class="primary" href="#building" data-tab-target="building">Go to Building</a>
+        <a class="primary" href="#models" data-tab-target="models">Compare Models</a>
       </div>
     </section>
 
@@ -36,7 +41,8 @@
         <div class="pill">Step 1</div>
         <div>
           <h2>Terrain + live 3D base</h2>
-          <p class="subtle">Upload your DEM/DXF, set a slope hint, and watch the building sit on the ground plane instantly.</p>
+          <p class="subtle">Upload your DEM/DXF, set a slope hint, and watch the building sit on the ground plane
+            instantly.</p>
         </div>
         <div class="pill pill-accent">Live preview</div>
       </div>
@@ -49,14 +55,14 @@
           </div>
           <h3>DEM / terrain file</h3>
           <p class="subtle">Drag a GeoTIFF/DEM file (.tif/.tiff) and we'll derive a slope factor.</p>
-          
+
           <!-- Drop Zone -->
           <div id="dem-dropzone" class="dropzone">
             <div class="dropzone-content">
               <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
               <p class="dropzone-text">Drag & drop GeoTIFF here</p>
               <p class="dropzone-hint">or click to browse (.tif / .tiff only)</p>
@@ -68,14 +74,14 @@
             <button type="button" class="file-remove" title="Remove file">&times;</button>
           </div>
           <div id="dem-error" class="dropzone-error" style="display: none;"></div>
-          
+
           <form id="terrain-form" class="stacked-form">
             <label>Slope hint (degrees)
               <input type="number" id="slope-hint" value="8" step="0.1" />
             </label>
             <button type="submit">Upload & compute slope factor</button>
           </form>
-          
+
           <div id="slope-result" class="slope-result" style="display: none;">
             <div class="slope-value">
               <span class="slope-label">Derived Slope:</span>
@@ -86,7 +92,7 @@
             </div>
             <span class="slope-category"></span>
           </div>
-          
+
           <div class="hint-row">
             <span class="dot dot-blue"></span> Gentle = 0–10°
             <span class="dot dot-amber"></span> Medium = 10–20°
@@ -212,6 +218,289 @@
       </div>
     </section>
 
+    <!-- ═══════ MODELS COMPARISON TAB ═══════ -->
+    <section class="card tab-panel models-panel" data-tab="models" id="models">
+      <div class="section-header">
+        <div class="pill">Compare</div>
+        <div>
+          <h2>Model Comparison</h2>
+          <p class="subtle">Select a building model, inspect its 3D form, review performance metrics, and adjust
+            variables for real-time earthquake simulation.</p>
+        </div>
+        <div class="pill pill-accent">5 Models</div>
+      </div>
+
+      <!-- Model selector tabs -->
+      <div class="model-selector">
+        <button class="model-tab active" data-model="0">
+          <span class="model-tab-icon">🏢</span>
+          <span class="model-tab-name">RC Frame</span>
+          <span class="model-tab-badge">Popular</span>
+        </button>
+        <button class="model-tab" data-model="1">
+          <span class="model-tab-icon">🏗️</span>
+          <span class="model-tab-name">Steel Frame</span>
+          <span class="model-tab-badge badge-blue">Strong</span>
+        </button>
+        <button class="model-tab" data-model="2">
+          <span class="model-tab-icon">🌿</span>
+          <span class="model-tab-name">Timber Eco</span>
+          <span class="model-tab-badge badge-green">Green</span>
+        </button>
+        <button class="model-tab" data-model="3">
+          <span class="model-tab-icon">🛡️</span>
+          <span class="model-tab-name">Base Isolated</span>
+          <span class="model-tab-badge badge-purple">Safe</span>
+        </button>
+        <button class="model-tab" data-model="4">
+          <span class="model-tab-icon">🔬</span>
+          <span class="model-tab-name">Hybrid Damper</span>
+          <span class="model-tab-badge badge-cyan">Advanced</span>
+        </button>
+      </div>
+
+      <!-- Model info strip -->
+      <div class="model-info-strip" id="model-info-strip">
+        <div class="info-chip">
+          <span class="info-chip-label">Material</span>
+          <span class="info-chip-value" id="info-material">Reinforced Concrete</span>
+        </div>
+        <div class="info-chip">
+          <span class="info-chip-label">CO₂ / m²</span>
+          <span class="info-chip-value" id="info-co2">420 kg</span>
+        </div>
+        <div class="info-chip">
+          <span class="info-chip-label">Cost / m²</span>
+          <span class="info-chip-value" id="info-cost">$1,250</span>
+        </div>
+        <div class="info-chip">
+          <span class="info-chip-label">Max Stories</span>
+          <span class="info-chip-value" id="info-maxstories">25</span>
+        </div>
+        <div class="info-chip">
+          <span class="info-chip-label">Typical Use</span>
+          <span class="info-chip-value" id="info-use">Mid-rise residential</span>
+        </div>
+      </div>
+
+      <!-- Top row: 3D viewer (left) + Radar diagram (right) -->
+      <div class="models-top-row">
+        <!-- LEFT: 3D simulation viewer -->
+        <div class="mini-card models-viewer-card glow-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">3D Simulation</div>
+            <span class="eyebrow" id="model-viewer-label">RC Frame</span>
+          </div>
+          <div id="models-3d-container">
+            <canvas id="models-3d-canvas"></canvas>
+            <div class="viewer-overlay" id="viewer-overlay">
+              <span class="viewer-overlay-text">Click a model tab to begin</span>
+            </div>
+          </div>
+          <div class="models-viewer-legend">
+            <span><span class="legend-dot blue"></span> Structure</span>
+            <span><span class="legend-dot orange"></span> Ground motion</span>
+            <span class="viewer-badge" id="model-type-badge">RC</span>
+            <span id="models-sim-status" class="microcopy">Ready — adjust sliders to simulate</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: Radar / performance diagram -->
+        <div class="mini-card models-diagram-card glow-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">Performance Radar</div>
+            <span class="eyebrow">Metrics overview</span>
+          </div>
+          <div class="radar-container">
+            <canvas id="radar-chart" width="380" height="380"></canvas>
+          </div>
+
+          <!-- Stat bars beneath radar -->
+          <div class="model-stats" id="model-stats">
+            <div class="stat-row">
+              <span class="stat-label">⚡ Strength</span>
+              <div class="stat-bar">
+                <div class="stat-bar-fill strength-fill" style="width:0%"></div>
+              </div>
+              <span class="stat-value" id="stat-strength">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">🌱 Eco-Friendly</span>
+              <div class="stat-bar">
+                <div class="stat-bar-fill eco-fill" style="width:0%"></div>
+              </div>
+              <span class="stat-value" id="stat-eco">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">🛡️ Earthquake Res.</span>
+              <div class="stat-bar">
+                <div class="stat-bar-fill quake-fill" style="width:0%"></div>
+              </div>
+              <span class="stat-value" id="stat-quake">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">💰 Cost Efficiency</span>
+              <div class="stat-bar">
+                <div class="stat-bar-fill cost-fill" style="width:0%"></div>
+              </div>
+              <span class="stat-value" id="stat-cost">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">🔧 Durability</span>
+              <div class="stat-bar">
+                <div class="stat-bar-fill dura-fill" style="width:0%"></div>
+              </div>
+              <span class="stat-value" id="stat-dura">0</span>
+            </div>
+          </div>
+
+          <!-- Model description -->
+          <div class="model-desc-box" id="model-desc-box">
+            <p id="model-desc-text">Reinforced Concrete frame – strong and cost-effective, standard code design.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom: real-time variable controls -->
+      <div class="mini-card models-controls-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost">Simulation Controls</div>
+          <span class="eyebrow">Adjust variables in real time</span>
+        </div>
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="sim-magnitude">🌊 Earthquake Magnitude</label>
+            <input type="range" id="sim-magnitude" min="1" max="10" step="0.1" value="5.0" />
+            <div class="control-readout"><span id="sim-magnitude-val">5.0</span> <small>Richter</small></div>
+          </div>
+          <div class="control-group">
+            <label for="sim-pga">📈 Peak Ground Accel.</label>
+            <input type="range" id="sim-pga" min="0.01" max="1.5" step="0.01" value="0.25" />
+            <div class="control-readout"><span id="sim-pga-val">0.25</span> <small>g</small></div>
+          </div>
+          <div class="control-group">
+            <label for="sim-soil">🏔️ Soil Amplification</label>
+            <input type="range" id="sim-soil" min="0.5" max="2.0" step="0.05" value="1.15" />
+            <div class="control-readout"><span id="sim-soil-val">1.15</span> <small>×</small></div>
+          </div>
+          <div class="control-group">
+            <label for="sim-stories">🏢 Stories</label>
+            <input type="range" id="sim-stories" min="1" max="30" step="1" value="5" />
+            <div class="control-readout"><span id="sim-stories-val">5</span></div>
+          </div>
+          <div class="control-group">
+            <label for="sim-duration">⏱️ Duration</label>
+            <input type="range" id="sim-duration" min="1" max="60" step="1" value="15" />
+            <div class="control-readout"><span id="sim-duration-val">15</span> <small>sec</small></div>
+          </div>
+          <div class="control-group">
+            <label for="sim-damping">🔧 Damping Ratio</label>
+            <input type="range" id="sim-damping" min="0.01" max="0.30" step="0.01" value="0.05" />
+            <div class="control-readout"><span id="sim-damping-val">0.05</span></div>
+          </div>
+        </div>
+        <div class="controls-actions">
+          <button type="button" id="sim-run-btn" class="sim-run-btn">▶ Run Simulation</button>
+          <button type="button" id="sim-reset-btn" class="sim-reset-btn">↺ Reset</button>
+        </div>
+        <div id="sim-result-bar" class="sim-result-bar" style="display:none;">
+          <span class="sim-result-label">Estimated Damage:</span>
+          <span class="sim-result-value" id="sim-damage-value">—</span>
+          <span class="sim-result-rating" id="sim-damage-rating">—</span>
+        </div>
+      </div>
+
+      <!-- Simulation history (mock data) -->
+      <div class="mini-card history-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost">📋 Recent Simulations</div>
+          <span class="eyebrow">Mock history</span>
+        </div>
+        <div class="history-table-wrap">
+          <table class="history-table" id="sim-history-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Model</th>
+                <th>Magnitude</th>
+                <th>PGA (g)</th>
+                <th>Stories</th>
+                <th>Damage</th>
+                <th>Rating</th>
+              </tr>
+            </thead>
+            <tbody id="sim-history-body">
+              <tr>
+                <td>1</td>
+                <td>RC Frame</td>
+                <td>5.0</td>
+                <td>0.25</td>
+                <td>5</td>
+                <td>34.2%</td>
+                <td><span class="rating-badge moderate">Moderate</span></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Steel Frame</td>
+                <td>6.5</td>
+                <td>0.40</td>
+                <td>8</td>
+                <td>28.7%</td>
+                <td><span class="rating-badge low">Low</span></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Timber Eco</td>
+                <td>7.0</td>
+                <td>0.55</td>
+                <td>4</td>
+                <td>62.1%</td>
+                <td><span class="rating-badge moderate">Moderate</span></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>Base Isolated</td>
+                <td>8.0</td>
+                <td>0.80</td>
+                <td>6</td>
+                <td>18.3%</td>
+                <td><span class="rating-badge low">Low</span></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>Hybrid Damper</td>
+                <td>7.5</td>
+                <td>0.60</td>
+                <td>10</td>
+                <td>22.9%</td>
+                <td><span class="rating-badge low">Low</span></td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>RC Frame</td>
+                <td>9.0</td>
+                <td>1.20</td>
+                <td>12</td>
+                <td>78.4%</td>
+                <td><span class="rating-badge high">High</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Quick comparison summary -->
+      <div class="mini-card comparison-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost">📊 Quick Comparison</div>
+          <span class="eyebrow">All 5 models at a glance</span>
+        </div>
+        <div class="comparison-grid" id="comparison-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
     <section class="card instructions-card tab-panel" data-tab="instructions" id="instructions">
       <div class="section-header">
         <div class="pill">Step 3</div>
@@ -242,8 +531,11 @@
             <span class="eyebrow">Dev</span>
           </div>
           <ul class="bullet-list">
-            <li><strong>Backend:</strong> <code>uvicorn app.main:app --reload --port 8000</code> (from <code>backend</code>).</li>
-            <li><strong>Frontend:</strong> <code>python -m http.server 5173</code> (from <code>frontend</code>), then open <code>http://localhost:5173/</code>.</li>
+            <li><strong>Backend:</strong> <code>uvicorn app.main:app --reload --port 8000</code> (from
+              <code>backend</code>).
+            </li>
+            <li><strong>Frontend:</strong> <code>python -m http.server 5173</code> (from <code>frontend</code>), then
+              open <code>http://localhost:5173/</code>.</li>
           </ul>
           <p class="microcopy">You can also open <code>index.html</code> directly for a quick static preview.</p>
         </div>
@@ -266,6 +558,8 @@
   <script src="lib/three.min.js"></script>
   <script src="lib/OrbitControls.js"></script>
   <script src="lib/GLTFLoader.js"></script>
+  <script src="models.js"></script>
   <script src="main.js"></script>
 </body>
+
 </html>

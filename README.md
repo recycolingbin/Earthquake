@@ -125,3 +125,202 @@ DONE. NOBODY INSTALLS ANYTHING.
 
 You are now the hero of the civil engineering team. Go drink coffee. ☕🌍
 
+---
+
+## Publish Online With Your Domain
+
+If you already own a domain, the most reliable setup is:
+- `Frontend` served by Nginx
+- `Backend` (FastAPI/Uvicorn) running as a system service
+- `Nginx` reverse proxy `/api/*` to the backend
+- `HTTPS` via Let's Encrypt
+
+This repo is already prepared for that flow:
+- On localhost, frontend calls `http://localhost:8000`
+- On a real domain, frontend calls `/api` on the same domain
+
+### 1. Point domain DNS to your server
+
+In your domain DNS panel:
+- Create `A` record for `@` -> `YOUR_SERVER_PUBLIC_IP`
+- Optional: create `A` record for `www` -> `YOUR_SERVER_PUBLIC_IP`
+
+Wait for DNS propagation (usually a few minutes, can be longer).
+
+### 2. SSH into your Linux server and install stack
+
+```bash
+sudo apt update
+sudo apt install -y python3 python3-venv nginx certbot python3-certbot-nginx
+```
+
+### 3. Deploy backend
+
+```bash
+sudo mkdir -p /opt/seismosafe
+sudo chown "$USER":"$USER" /opt/seismosafe
+cd /opt/seismosafe
+
+# clone your repo
+git clone <YOUR_GIT_REPO_URL> .
+
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install fastapi uvicorn python-multipart httpx
+```
+
+Create `/etc/systemd/system/seismosafe-backend.service`:
+
+```ini
+[Unit]
+Description=SeismoSafe FastAPI Backend
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/seismosafe/backend
+Environment="PATH=/opt/seismosafe/backend/.venv/bin"
+ExecStart=/opt/seismosafe/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable seismosafe-backend
+sudo systemctl start seismosafe-backend
+sudo systemctl status seismosafe-backend
+```
+
+### 4. Deploy frontend + Nginx config
+
+Copy frontend files to web root:
+
+```bash
+sudo mkdir -p /var/www/seismosafe
+sudo cp -r /opt/seismosafe/frontend/* /var/www/seismosafe/
+```
+
+Create `/etc/nginx/sites-available/seismosafe`:
+
+```nginx
+server {
+	server_name yourdomain.com www.yourdomain.com;
+
+	root /var/www/seismosafe;
+	index index.html;
+
+	location / {
+		try_files $uri $uri/ /index.html;
+	}
+
+	location /api/ {
+		proxy_pass http://127.0.0.1:8000/;
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+	}
+}
+```
+
+Enable site:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/seismosafe /etc/nginx/sites-enabled/seismosafe
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 5. Enable HTTPS (SSL)
+
+```bash
+sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+```
+
+After success, open:
+- `https://yourdomain.com`
+
+### 6. Update after code changes
+
+```bash
+cd /opt/seismosafe
+git pull
+
+# backend updates
+cd /opt/seismosafe/backend
+source .venv/bin/activate
+pip install -r requirements.txt || true
+sudo systemctl restart seismosafe-backend
+
+# frontend updates
+sudo cp -r /opt/seismosafe/frontend/* /var/www/seismosafe/
+sudo systemctl reload nginx
+```
+
+---
+
+## Deploy Without VPS (Render Free Tier)
+
+If you do not want monthly VPS cost, use Render. This repo works well on Render with 2 services:
+- Backend: Python Web Service (FastAPI)
+- Frontend: Static Site (plain HTML/CSS/JS)
+
+Important correction for this repo:
+- It is **not** Vite/React in the current codebase.
+- Frontend has no `package.json`, so no `npm run build` is required.
+- Backend start command is `uvicorn app.main:app ...` (not `main:app`).
+
+### A. Backend on Render
+
+1. Push this repo to GitHub.
+2. In Render dashboard: `New` -> `Web Service`.
+3. Select this repo.
+4. Configure:
+	- Name: `seismosafe-backend`
+	- Root Directory: `backend`
+	- Runtime: `Python`
+	- Build Command: `pip install -r requirements.txt`
+	- Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. Deploy and copy the backend URL (example: `https://seismosafe-backend.onrender.com`).
+
+### B. Frontend on Render
+
+1. In Render dashboard: `New` -> `Static Site`.
+2. Select same repo.
+3. Configure:
+	- Name: `seismosafe-frontend`
+	- Root Directory: `frontend`
+	- Build Command: leave empty
+	- Publish Directory: `.`
+4. Deploy.
+
+### C. Connect Frontend to Backend
+
+Edit `frontend/index.html` and set this meta tag:
+
+```html
+<meta name="api-base" content="https://seismosafe-backend.onrender.com" />
+```
+
+Then commit and redeploy frontend.
+
+### D. Connect Your Domain
+
+In Render for frontend service:
+1. `Settings` -> `Custom Domains` -> add your domain (example: `seismictibet.com`).
+2. Render shows DNS records.
+3. Add those records in your domain DNS panel.
+4. Wait for SSL provisioning, then open your domain.
+
+### E. Notes About Free Tier
+
+- Backend may sleep when idle; first request after idle can be slower.
+- For heavy GLTF assets, do not bundle all large files directly in app deploy if possible.
+
