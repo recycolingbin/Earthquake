@@ -19,6 +19,8 @@ const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
 const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
 const navLinks = Array.from(document.querySelectorAll(".nav-link"));
 const tabTriggers = Array.from(document.querySelectorAll("[data-tab-target]"));
+const mobileMenuToggle = document.querySelector(".mobile-menu-toggle");
+const mobileMenuBackdrop = document.querySelector(".mobile-menu-backdrop");
 
 // Minimal SimplexNoise (2D/3D) for background distortion (from Jonas Wagner, public domain)
 class SimplexNoise {
@@ -912,6 +914,36 @@ function wireTabs() {
   activate("home");
 }
 
+function wireMobileMenu() {
+  if (!mobileMenuToggle) return;
+  const setOpen = (open) => {
+    document.body.classList.toggle("mobile-menu-open", open);
+    mobileMenuToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    mobileMenuToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  };
+
+  mobileMenuToggle.addEventListener("click", () => {
+    const isOpen = document.body.classList.contains("mobile-menu-open");
+    setOpen(!isOpen);
+  });
+
+  mobileMenuBackdrop?.addEventListener("click", () => setOpen(false));
+
+  navLinks.forEach((link) =>
+    link.addEventListener("click", () => {
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        setOpen(false);
+      }
+    })
+  );
+
+  window.addEventListener("resize", () => {
+    if (!window.matchMedia("(max-width: 768px)").matches) {
+      setOpen(false);
+    }
+  });
+}
+
 function wireInstructionsToggle() {
   if (!infoBtn || !infoPop) return;
 
@@ -943,4 +975,5 @@ window.addEventListener("load", () => {
   if (typeof collectPayload === "function") updatePreview(collectPayload());
   wireInstructionsToggle();
   wireTabs();
+  wireMobileMenu();
 });

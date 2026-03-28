@@ -16,7 +16,13 @@
 
   <header>
     <div class="brand"></div>
-    <nav class="nav-top" aria-label="Page navigation">
+    <button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false"
+      aria-controls="primary-nav">
+      <span class="menu-bar"></span>
+      <span class="menu-bar"></span>
+      <span class="menu-bar"></span>
+    </button>
+    <nav class="nav-top" id="primary-nav" aria-label="Page navigation">
       <a class="nav-link" href="#home" data-tab-target="home">Home</a>
       <a class="nav-link" href="#terrain" data-tab-target="terrain">Terrain</a>
       <a class="nav-link" href="#building" data-tab-target="building">Building_Risk</a>
@@ -24,6 +30,8 @@
       <a class="nav-link" href="#instructions" data-tab-target="instructions">Instructions</a>
     </nav>
   </header>
+
+  <div class="mobile-menu-backdrop" aria-hidden="true"></div>
 
   <main>
     <section class="card tab-panel home-panel" data-tab="home" id="home">

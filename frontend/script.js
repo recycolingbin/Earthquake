@@ -86,12 +86,20 @@ function init() {
   scene.add(light);
 
   window.addEventListener("resize", onResize);
+  updateMobileCentering();
 }
 
 function onResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  updateMobileCentering();
+}
+
+function updateMobileCentering() {
+  if (!group) return;
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  group.position.set(isMobile ? 0 : 35, 0, 0);
 }
 
 var noiseOffset = 0;
