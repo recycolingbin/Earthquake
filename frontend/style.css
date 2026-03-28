@@ -128,7 +128,7 @@ body {
 
 .landing .home-panel {
   position: fixed;
-  left: 25%;
+  left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   width: auto;
@@ -2031,12 +2031,12 @@ body {
   }
 
   .landing .home-panel {
-    position: static;
-    left: auto;
-    top: auto;
-    transform: none;
-    width: 100%;
-    max-width: 100%;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(90vw, 420px);
+    max-width: 420px;
     margin-top: 0;
   }
 
