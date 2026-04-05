@@ -17,6 +17,7 @@
       <a class="nav-link" href="#home" data-tab-target="home">Home</a>
       <a class="nav-link" href="#terrain" data-tab-target="terrain">Terrain</a>
       <a class="nav-link" href="#building" data-tab-target="building">Building_Risk</a>
+      <a class="nav-link" href="#simulation" data-tab-target="simulation">Simulation</a>
       <a class="nav-link" href="#instructions" data-tab-target="instructions">Instructions</a>
     </nav>
   </header>
@@ -209,6 +210,73 @@
           <span class="eyebrow">Backend response</span>
         </div>
         <pre id="risk-result" class="result"></pre>
+      </div>
+    </section>
+
+    <section class="card tab-panel" data-tab="simulation" id="simulation">
+      <div class="section-header">
+        <div class="pill">Simulation</div>
+        <div>
+          <h2>Earthquake Simulation</h2>
+          <p class="subtle">Visualize building collapse under seismic stress. Model breaks at magnitude 8.5+</p>
+        </div>
+        <div class="pill pill-accent">Interactive</div>
+      </div>
+
+      <div class="form-grid">
+        <div class="mini-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">Controls</div>
+            <span class="eyebrow">Earthquake intensity</span>
+          </div>
+          <div class="stacked-form">
+            <label>Magnitude (0-10)
+              <input type="range" id="eq-magnitude" min="0" max="10" step="0.1" value="0" />
+              <div class="magnitude-display">
+                <span id="magnitude-value">0.0</span>
+                <span id="magnitude-status" class="magnitude-status safe">Safe</span>
+              </div>
+            </label>
+            <div class="button-row">
+              <button type="button" id="reset-simulation">Reset Building</button>
+              <button type="button" id="auto-earthquake">Auto Earthquake</button>
+            </div>
+            <div class="callout callout-soft">
+              Building will break and collapse at magnitude 8.5 and above
+            </div>
+          </div>
+        </div>
+
+        <div class="mini-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">3D View</div>
+            <span class="eyebrow">Live simulation</span>
+          </div>
+          <div id="simulation-container">
+            <div id="simulation-canvas"></div>
+            <div id="simulation-status" aria-live="polite">Initializing simulation...</div>
+          </div>
+          <div class="legend">
+            <span><span class="legend-dot blue"></span>Ground plane</span>
+            <span><span class="legend-dot orange"></span>Building structure</span>
+          </div>
+        </div>
+
+        <div class="mini-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">Info</div>
+            <span class="eyebrow">Simulation details</span>
+          </div>
+          <ul class="bullet-list">
+            <li><strong>Model:</strong> Pre-cracked building structure</li>
+            <li><strong>Physics:</strong> Gravity-based collapse simulation</li>
+            <li><strong>Trigger:</strong> Magnitude ≥ 8.5</li>
+            <li><strong>Effects:</strong> Ground shake, structural failure</li>
+          </ul>
+          <p class="microcopy">
+            The building model contains pre-defined crack patterns. When earthquake magnitude reaches 8.5 or higher, the structure fragments along these cracks and collapses under gravity.
+          </p>
+        </div>
       </div>
     </section>
 
