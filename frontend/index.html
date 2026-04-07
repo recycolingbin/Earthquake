@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="api-base" content="https://seismosafe-backend.onrender.com" />
   <title>SeismoSafe</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -14,55 +16,153 @@
     <iframe src="noise-background.html" title="Background visualizer" scrolling="no"></iframe>
   </div>
 
-  <header>
-    <div class="brand"></div>
-    <button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false"
-      aria-controls="primary-nav">
-      <span class="menu-bar"></span>
-      <span class="menu-bar"></span>
-      <span class="menu-bar"></span>
-    </button>
-    <nav class="nav-top" id="primary-nav" aria-label="Page navigation">
-      <a class="nav-link" href="#home" data-tab-target="home">Home</a>
-      <a class="nav-link" href="#terrain" data-tab-target="terrain">Terrain</a>
-      <a class="nav-link" href="#building" data-tab-target="building">Building_Risk</a>
-      <a class="nav-link" href="#models" data-tab-target="models">Models</a>
-      <a class="nav-link" href="#instructions" data-tab-target="instructions">Instructions</a>
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-logo">S</span>
+      <span class="sidebar-title">SeismoSafe</span>
+    </div>
+    <nav class="sidebar-nav" id="primary-nav" aria-label="Page navigation">
+      <a class="nav-link" href="#home" data-tab-target="home">
+        <span class="sidebar-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="sidebar-label" data-i18n="nav.home">Home</span>
+      </a>
+      <a class="nav-link" href="#terrain" data-tab-target="terrain">
+        <span class="sidebar-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></svg></span><span class="sidebar-label" data-i18n="nav.terrain">Terrain</span>
+      </a>
+      <a class="nav-link" href="#models" data-tab-target="models">
+        <span class="sidebar-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="sidebar-label" data-i18n="nav.models">Models</span>
+      </a>
+      <a class="nav-link" href="#collapse" data-tab-target="collapse">
+        <span class="sidebar-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="sidebar-label" data-i18n="nav.collapse">Collapse Lab</span>
+      </a>
+      <a class="nav-link" href="#waves" data-tab-target="waves">
+        <span class="sidebar-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c.6-.5 1.2-1 2.5-1 2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2c1.3 0 1.9-.5 2.5-1"/><path d="M2 7c.6-.5 1.2-1 2.5-1 2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2c1.3 0 1.9-.5 2.5-1"/><path d="M2 17c.6-.5 1.2-1 2.5-1 2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2c1.3 0 1.9-.5 2.5-1"/></svg></span><span class="sidebar-label" data-i18n="nav.waves">Waves</span>
+      </a>
+      <a class="nav-link" href="#designer" data-tab-target="designer">
+        <span class="sidebar-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span><span class="sidebar-label" data-i18n="nav.designer">Designer</span>
+      </a>
+      <a class="nav-link" href="#history" data-tab-target="history">
+        <span class="sidebar-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span class="sidebar-label" data-i18n="nav.history">History</span>
+      </a>
+      <a class="nav-link" href="#report" data-tab-target="report">
+        <span class="sidebar-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sidebar-label" data-i18n="nav.report">Report</span>
+      </a>
+      <a class="nav-link" href="#compare" data-tab-target="compare">
+        <span class="sidebar-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></span><span class="sidebar-label" data-i18n="nav.compare">Compare</span>
+      </a>
     </nav>
-  </header>
+    <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" type="button" aria-label="Collapse sidebar">
+      <span class="collapse-icon">«</span>
+    </button>
+    <div class="sidebar-footer">
+      <div class="sidebar-lang" id="lang-switcher">
+        <button class="lang-btn active" data-lang="en">🇬🇧 En</button>
+        <button class="lang-btn" data-lang="zh-TW">🇭🇰 繁中</button>
+        <button class="lang-btn" data-lang="zh-CN">🇨🇳 简中</button>
+      </div>
+    </div>
+  </aside>
 
-  <div class="mobile-menu-backdrop" aria-hidden="true"></div>
+  <!-- ── Mobile sidebar toggle (no topbar) ── -->
+  <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Toggle sidebar">
+    <span class="menu-bar"></span>
+    <span class="menu-bar"></span>
+    <span class="menu-bar"></span>
+  </button>
+
+  <!-- ── Floating help button ── -->
+  <button class="help-btn" id="help-btn" type="button" aria-label="Help">?</button>
+
+  <!-- ── Help panel ── -->
+  <div class="help-overlay" id="help-overlay"></div>
+  <div class="help-panel" id="help-panel">
+    <div class="help-panel-header">
+      <h3 data-i18n="manual.title">User Manual</h3>
+      <button class="help-close" id="help-close" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="help-panel-body" id="help-panel-body"></div>
+  </div>
+
+  <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
 
   <main>
     <section class="card tab-panel home-panel" data-tab="home" id="home">
-      <h2>SeismoSafe</h2>
-      <p class="sub">Terrain upload, simple building model, SAP2000 export, and risk score.</p>
-      <div class="button-row" style="justify-content: flex-end; gap: 0.8rem;">
-        <a class="primary" href="#terrain" data-tab-target="terrain">Start with Terrain</a>
-        <a class="primary" href="#building" data-tab-target="building">Go to Building</a>
-        <a class="primary" href="#models" data-tab-target="models">Compare Models</a>
-      </div>
+      <h2 data-i18n-title="home.title">SeismoSafe</h2>
+      <details class="tab-manual">
+        <summary data-i18n="manual.title">User Manual</summary>
+        <div class="manual-body">
+          <div class="lang-en">
+            <h4>Welcome to SeismoSafe</h4>
+            <p>A civil-engineering earthquake simulation platform focused on the <strong>Tibet / Sichuan /
+                Nepal</strong> (Himalayan) region.</p>
+            <h4>Quick Start</h4>
+            <ol>
+              <li><strong>Terrain</strong> — Upload a DEM file and set slope parameters for your site.</li>
+              <li><strong>Building &amp; Risk</strong> — Define structural massing and run quick risk checks or export
+                SAP2000 files.</li>
+              <li><strong>Models</strong> — Compare 5 structural systems (RC, Steel, Timber, Base Isolated, Hybrid)
+                under earthquake loading.</li>
+              <li><strong>Collapse Lab</strong> — Watch a cell-fractured building model collapse under M8+ shaking.</li>
+              <li><strong>History</strong> — Interactive Leaflet map of historical earthquakes with civil engineering
+                data.</li>
+              <li><strong>Designer / Report / Compare</strong> — Design, assess, and compare structural solutions.</li>
+            </ol>
+            <div class="manual-tip">Tip: Use the language switcher (EN / 繁中 / 简中) in the header to change languages.
+            </div>
+          </div>
+          <div class="lang-zh-TW" style="display:none">
+            <h4>歡迎使用 SeismoSafe</h4>
+            <p>專注於<strong>西藏 / 四川 / 尼泊爾</strong>（喜馬拉雅）區域的土木工程地震模擬平台。</p>
+            <h4>快速開始</h4>
+            <ol>
+              <li><strong>地形</strong> — 上傳 DEM 檔案並設定場址坡度參數。</li>
+              <li><strong>建築與風險</strong> — 定義結構量體並執行風險檢查或匯出 SAP2000。</li>
+              <li><strong>模型</strong> — 比較 5 種結構系統在地震荷載下的表現。</li>
+              <li><strong>倒塌實驗室</strong> — 觀看建築在 M8+ 震動下倒塌。</li>
+              <li><strong>歷史</strong> — 互動地圖顯示歷史地震與工程資料。</li>
+              <li><strong>設計 / 報告 / 比較</strong> — 設計、評估並比較結構方案。</li>
+            </ol>
+            <div class="manual-tip">提示：使用頁首的語言切換器（EN / 繁中 / 简中）來更換語言。</div>
+          </div>
+          <div class="lang-zh-CN" style="display:none">
+            <h4>欢迎使用 SeismoSafe</h4>
+            <p>专注于<strong>西藏 / 四川 / 尼泊尔</strong>（喜马拉雅）区域的土木工程地震模拟平台。</p>
+            <h4>快速开始</h4>
+            <ol>
+              <li><strong>地形</strong> — 上传 DEM 文件并设定场址坡度参数。</li>
+              <li><strong>建筑与风险</strong> — 定义结构体量并执行风险检查或导出 SAP2000。</li>
+              <li><strong>模型</strong> — 比较 5 种结构系统在地震荷载下的表现。</li>
+              <li><strong>倒塌实验室</strong> — 观看建筑在 M8+ 震动下倒塌。</li>
+              <li><strong>历史</strong> — 交互地图显示历史地震与工程资料。</li>
+              <li><strong>设计 / 报告 / 比较</strong> — 设计、评估并比较结构方案。</li>
+            </ol>
+            <div class="manual-tip">提示：使用页首的语言切换器（EN / 繁中 / 简中）来更换语言。</div>
+          </div>
+        </div>
+      </details>
     </section>
 
     <section class="card tab-panel terrain-panel" data-tab="terrain" id="terrain">
       <div class="section-header">
-        <div class="pill">Step 1</div>
+        <div class="pill" data-i18n="pill.step1">Step 1</div>
         <div>
-          <h2>Terrain + live 3D base</h2>
-          <p class="subtle">Upload your DEM/DXF, set a slope hint, and watch the building sit on the ground plane
+          <h2 data-i18n-title="terrain.title">Terrain + live 3D base</h2>
+          <p class="subtle" data-i18n-sub="terrain.sub">Upload your DEM/DXF, set a slope hint, and watch the building
+            sit on the ground plane
             instantly.</p>
         </div>
-        <div class="pill pill-accent">Live preview</div>
+        <div class="pill pill-accent" data-i18n="pill.livePreview">Live preview</div>
       </div>
 
       <div class="terrain-grid">
         <div class="mini-card">
           <div class="card-header-row">
-            <div class="pill pill-ghost">Upload</div>
-            <span class="eyebrow">Terrain factor</span>
+            <div class="pill pill-ghost" data-i18n="terrain.upload">Upload</div>
+            <span class="eyebrow" data-i18n="terrain.factor">Terrain factor</span>
           </div>
-          <h3>DEM / terrain file</h3>
-          <p class="subtle">Drag a GeoTIFF/DEM file (.tif/.tiff) and we'll derive a slope factor.</p>
+          <h3 data-i18n="terrain.demTitle">DEM / terrain file</h3>
+          <p class="subtle" data-i18n="terrain.demDesc">Drag a GeoTIFF/DEM file (.tif/.tiff) and we'll derive a slope
+            factor.</p>
 
           <!-- Drop Zone -->
           <div id="dem-dropzone" class="dropzone">
@@ -72,8 +172,8 @@
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <p class="dropzone-text">Drag & drop GeoTIFF here</p>
-              <p class="dropzone-hint">or click to browse (.tif / .tiff only)</p>
+              <p class="dropzone-text" data-i18n="terrain.dropText">Drag & drop GeoTIFF here</p>
+              <p class="dropzone-hint" data-i18n="terrain.dropHint">or click to browse (.tif / .tiff only)</p>
             </div>
             <input type="file" id="terrain-file" accept=".tif,.tiff" hidden />
           </div>
@@ -84,15 +184,15 @@
           <div id="dem-error" class="dropzone-error" style="display: none;"></div>
 
           <form id="terrain-form" class="stacked-form">
-            <label>Slope hint (degrees)
+            <label><span data-i18n="terrain.slopeHint">Slope hint (degrees)</span>
               <input type="number" id="slope-hint" value="8" step="0.1" />
             </label>
-            <button type="submit">Upload & compute slope factor</button>
+            <button type="submit" data-i18n="btn.upload">Upload & compute slope factor</button>
           </form>
 
           <div id="slope-result" class="slope-result" style="display: none;">
             <div class="slope-value">
-              <span class="slope-label">Derived Slope:</span>
+              <span class="slope-label" data-i18n="terrain.derivedSlope">Derived Slope:</span>
               <span class="slope-degrees">--</span>
             </div>
             <div class="slope-bar">
@@ -102,191 +202,105 @@
           </div>
 
           <div class="hint-row">
-            <span class="dot dot-blue"></span> Gentle = 0–10°
-            <span class="dot dot-amber"></span> Medium = 10–20°
-            <span class="dot dot-red"></span> Steep &gt; 20°
+            <span class="dot dot-blue"></span> <span data-i18n="terrain.gentle">Gentle = 0–10°</span>
+            <span class="dot dot-amber"></span> <span data-i18n="terrain.medium">Medium = 10–20°</span>
+            <span class="dot dot-red"></span> <span data-i18n="terrain.steep">Steep &gt; 20°</span>
           </div>
         </div>
 
         <div class="mini-card" id="terrain-3d-block">
           <div class="card-header-row">
-            <div class="pill pill-ghost">3D massing</div>
-            <span class="eyebrow">Box on sloped ground</span>
+            <div class="pill pill-ghost" data-i18n="terrain.3dMassing">3D massing</div>
+            <span class="eyebrow" data-i18n="terrain.boxOnSlope">Box on sloped ground</span>
           </div>
           <div id="preview-container">
             <div id="preview-canvas"></div>
             <div id="preview-status" aria-live="polite"></div>
           </div>
           <div class="legend">
-            <span><span class="legend-dot blue"></span>Ground plane (slope)</span>
-            <span><span class="legend-dot orange"></span>Building mass</span>
+            <span><span class="legend-dot blue"></span><span data-i18n="terrain.groundPlane">Ground plane
+                (slope)</span></span>
+            <span><span class="legend-dot orange"></span><span data-i18n="terrain.buildingMass">Building
+                mass</span></span>
           </div>
-          <p class="microcopy">Use the Building tab to tweak bays, stories, and story height—preview refreshes live.</p>
+          <p class="microcopy" data-i18n="terrain.microcopy">Use the Building tab to tweak bays, stories, and story
+            height—preview refreshes live.</p>
         </div>
 
-        <div class="mini-card mini-instructions">
-          <div class="pill pill-ghost">How-to</div>
-          <h3>Terrain workflow</h3>
-          <ol class="step-list">
-            <li><strong>Drop your DEM</strong> or test file and click Upload.</li>
-            <li><strong>Adjust slope hint</strong> if the site is steeper than average.</li>
-            <li><strong>Jump to Building</strong> and set stories/bays—3D updates in this tab.</li>
-            <li><strong>Review read-out</strong> below for slope factor + metadata.</li>
-          </ol>
-          <div class="callout">Tip: keep slope realistic; the risk score uses it directly.</div>
-        </div>
+
       </div>
 
       <div class="result-card">
         <div class="card-header-row">
-          <div class="pill pill-ghost">Read-out</div>
-          <span class="eyebrow">Backend response</span>
+          <div class="pill pill-ghost" data-i18n="terrain.readout">Read-out</div>
+          <span class="eyebrow" data-i18n="terrain.backend">Backend response</span>
         </div>
         <pre id="terrain-result" class="result"></pre>
-      </div>
-    </section>
-
-    <section class="card tab-panel" data-tab="building" id="building">
-      <div class="section-header">
-        <div class="pill">Step 2</div>
-        <div>
-          <h2>Building &amp; risk</h2>
-          <p class="subtle">Set massing parameters and site data; run the quick risk check or export SAP2000.</p>
-        </div>
-        <div class="pill pill-accent">Analysis</div>
-      </div>
-
-      <div class="form-grid">
-        <div class="mini-card">
-          <div class="card-header-row">
-            <div class="pill pill-ghost">Massing</div>
-            <span class="eyebrow">Geometry</span>
-          </div>
-          <form id="building-form" class="stacked-form">
-            <label>Name <input type="text" id="b-name" value="Concept Model" /></label>
-            <div class="two-col">
-              <label>Stories <input type="number" id="b-stories" value="5" min="1" /></label>
-              <label>Story height (m) <input type="number" id="b-storyh" value="3.2" step="0.1" min="0.1" /></label>
-            </div>
-            <div class="two-col">
-              <label>Bay width (m) <input type="number" id="b-bayw" value="6" step="0.1" min="0.1" /></label>
-              <label>Bay depth (m) <input type="number" id="b-bayd" value="6" step="0.1" min="0.1" /></label>
-            </div>
-            <label>Material
-              <select id="b-material">
-                <option value="RC">RC</option>
-                <option value="Steel">Steel</option>
-              </select>
-            </label>
-            <label>Importance factor <input type="number" id="b-importance" value="1.0" step="0.1" min="0.1" /></label>
-          </form>
-        </div>
-
-        <div class="mini-card">
-          <div class="card-header-row">
-            <div class="pill pill-ghost">Site</div>
-            <span class="eyebrow">Hazard inputs</span>
-          </div>
-          <div class="stacked-form">
-            <label>Site class
-              <select id="s-siteclass">
-                <option value="C">C</option>
-                <option value="D" selected>D</option>
-                <option value="E">E</option>
-              </select>
-            </label>
-            <div class="two-col">
-              <label>Slope (degrees) <input type="number" id="s-slope" value="8" step="0.1" min="0" /></label>
-              <label>PGA (g) <input type="number" id="s-pga" value="0.25" step="0.01" min="0" /></label>
-            </div>
-            <label>Seismic zone <input type="text" id="s-zone" placeholder="Optional" /></label>
-            <div class="callout callout-soft">Uses same slope as terrain—keep it in sync.</div>
-          </div>
-        </div>
-
-        <div class="mini-card actions-card">
-          <div class="card-header-row">
-            <div class="pill pill-ghost">Actions</div>
-            <span class="eyebrow">Compute / export</span>
-          </div>
-          <div class="stacked-buttons">
-            <button type="button" id="risk-btn">Compute risk score</button>
-            <button type="button" id="sap-btn">Export SAP2000 .s2k</button>
-          </div>
-          <p class="microcopy">Risk/export use both massing and site inputs.</p>
-        </div>
-      </div>
-
-      <div class="result-card">
-        <div class="card-header-row">
-          <div class="pill pill-ghost">Risk output</div>
-          <span class="eyebrow">Backend response</span>
-        </div>
-        <pre id="risk-result" class="result"></pre>
       </div>
     </section>
 
     <!-- ═══════ MODELS COMPARISON TAB ═══════ -->
     <section class="card tab-panel models-panel" data-tab="models" id="models">
       <div class="section-header">
-        <div class="pill">Compare</div>
+        <div class="pill" data-i18n="pill.compare">Compare</div>
         <div>
-          <h2>Model Comparison</h2>
-          <p class="subtle">Select a building model, inspect its 3D form, review performance metrics, and adjust
+          <h2 data-i18n-title="models.title">Model Comparison</h2>
+          <p class="subtle" data-i18n-sub="models.sub">Select a building model, inspect its 3D form, review performance
+            metrics, and adjust
             variables for real-time earthquake simulation.</p>
         </div>
-        <div class="pill pill-accent">5 Models</div>
+        <div class="pill pill-accent" data-i18n="pill.5models">5 Models</div>
       </div>
 
       <!-- Model selector tabs -->
       <div class="model-selector">
         <button class="model-tab active" data-model="0">
           <span class="model-tab-icon">🏢</span>
-          <span class="model-tab-name">RC Frame</span>
-          <span class="model-tab-badge">Popular</span>
+          <span class="model-tab-name" data-i18n="mod.rcFrame">RC Frame</span>
+          <span class="model-tab-badge" data-i18n="mod.popular">Popular</span>
         </button>
         <button class="model-tab" data-model="1">
           <span class="model-tab-icon">🏗️</span>
-          <span class="model-tab-name">Steel Frame</span>
-          <span class="model-tab-badge badge-blue">Strong</span>
+          <span class="model-tab-name" data-i18n="mod.steelFrame">Steel Frame</span>
+          <span class="model-tab-badge badge-blue" data-i18n="mod.strong">Strong</span>
         </button>
         <button class="model-tab" data-model="2">
           <span class="model-tab-icon">🌿</span>
-          <span class="model-tab-name">Timber Eco</span>
-          <span class="model-tab-badge badge-green">Green</span>
+          <span class="model-tab-name" data-i18n="mod.timberEco">Timber Eco</span>
+          <span class="model-tab-badge badge-green" data-i18n="mod.green">Green</span>
         </button>
         <button class="model-tab" data-model="3">
           <span class="model-tab-icon">🛡️</span>
-          <span class="model-tab-name">Base Isolated</span>
-          <span class="model-tab-badge badge-purple">Safe</span>
+          <span class="model-tab-name" data-i18n="mod.baseIsolated">Base Isolated</span>
+          <span class="model-tab-badge badge-purple" data-i18n="mod.safe">Safe</span>
         </button>
         <button class="model-tab" data-model="4">
           <span class="model-tab-icon">🔬</span>
-          <span class="model-tab-name">Hybrid Damper</span>
-          <span class="model-tab-badge badge-cyan">Advanced</span>
+          <span class="model-tab-name" data-i18n="mod.hybridDamper">Hybrid Damper</span>
+          <span class="model-tab-badge badge-cyan" data-i18n="mod.advanced">Advanced</span>
         </button>
       </div>
 
       <!-- Model info strip -->
       <div class="model-info-strip" id="model-info-strip">
         <div class="info-chip">
-          <span class="info-chip-label">Material</span>
+          <span class="info-chip-label" data-i18n="mod.material">Material</span>
           <span class="info-chip-value" id="info-material">Reinforced Concrete</span>
         </div>
         <div class="info-chip">
-          <span class="info-chip-label">CO₂ / m²</span>
+          <span class="info-chip-label" data-i18n="mod.co2">CO₂ / m²</span>
           <span class="info-chip-value" id="info-co2">420 kg</span>
         </div>
         <div class="info-chip">
-          <span class="info-chip-label">Cost / m²</span>
+          <span class="info-chip-label" data-i18n="mod.costM2">Cost / m²</span>
           <span class="info-chip-value" id="info-cost">$1,250</span>
         </div>
         <div class="info-chip">
-          <span class="info-chip-label">Max Stories</span>
+          <span class="info-chip-label" data-i18n="mod.maxStories">Max Stories</span>
           <span class="info-chip-value" id="info-maxstories">25</span>
         </div>
         <div class="info-chip">
-          <span class="info-chip-label">Typical Use</span>
+          <span class="info-chip-label" data-i18n="mod.typicalUse">Typical Use</span>
           <span class="info-chip-value" id="info-use">Mid-rise residential</span>
         </div>
       </div>
@@ -296,28 +310,29 @@
         <!-- LEFT: 3D simulation viewer -->
         <div class="mini-card models-viewer-card glow-card">
           <div class="card-header-row">
-            <div class="pill pill-ghost">3D Simulation</div>
+            <div class="pill pill-ghost" data-i18n="mod.3dSim">3D Simulation</div>
             <span class="eyebrow" id="model-viewer-label">RC Frame</span>
           </div>
           <div id="models-3d-container">
             <canvas id="models-3d-canvas"></canvas>
             <div class="viewer-overlay" id="viewer-overlay">
-              <span class="viewer-overlay-text">Click a model tab to begin</span>
+              <span class="viewer-overlay-text" data-i18n="mod.clickToBegin">Click a model tab to begin</span>
             </div>
           </div>
           <div class="models-viewer-legend">
-            <span><span class="legend-dot blue"></span> Structure</span>
-            <span><span class="legend-dot orange"></span> Ground motion</span>
+            <span><span class="legend-dot blue"></span> <span data-i18n="mod.structure">Structure</span></span>
+            <span><span class="legend-dot orange"></span> <span data-i18n="mod.groundMotion">Ground motion</span></span>
             <span class="viewer-badge" id="model-type-badge">RC</span>
-            <span id="models-sim-status" class="microcopy">Ready — adjust sliders to simulate</span>
+            <span id="models-sim-status" class="microcopy" data-i18n="mod.readySim">Ready — adjust sliders to
+              simulate</span>
           </div>
         </div>
 
         <!-- RIGHT: Radar / performance diagram -->
         <div class="mini-card models-diagram-card glow-card">
           <div class="card-header-row">
-            <div class="pill pill-ghost">Performance Radar</div>
-            <span class="eyebrow">Metrics overview</span>
+            <div class="pill pill-ghost" data-i18n="mod.perfRadar">Performance Radar</div>
+            <span class="eyebrow" data-i18n="mod.metrics">Metrics overview</span>
           </div>
           <div class="radar-container">
             <canvas id="radar-chart" width="380" height="380"></canvas>
@@ -326,35 +341,35 @@
           <!-- Stat bars beneath radar -->
           <div class="model-stats" id="model-stats">
             <div class="stat-row">
-              <span class="stat-label">⚡ Strength</span>
+              <span class="stat-label" data-i18n="mod.strength">⚡ Strength</span>
               <div class="stat-bar">
                 <div class="stat-bar-fill strength-fill" style="width:0%"></div>
               </div>
               <span class="stat-value" id="stat-strength">0</span>
             </div>
             <div class="stat-row">
-              <span class="stat-label">🌱 Eco-Friendly</span>
+              <span class="stat-label" data-i18n="mod.eco">🌱 Eco-Friendly</span>
               <div class="stat-bar">
                 <div class="stat-bar-fill eco-fill" style="width:0%"></div>
               </div>
               <span class="stat-value" id="stat-eco">0</span>
             </div>
             <div class="stat-row">
-              <span class="stat-label">🛡️ Earthquake Res.</span>
+              <span class="stat-label" data-i18n="mod.quakeRes">🛡️ Earthquake Res.</span>
               <div class="stat-bar">
                 <div class="stat-bar-fill quake-fill" style="width:0%"></div>
               </div>
               <span class="stat-value" id="stat-quake">0</span>
             </div>
             <div class="stat-row">
-              <span class="stat-label">💰 Cost Efficiency</span>
+              <span class="stat-label" data-i18n="mod.costEff">💰 Cost Efficiency</span>
               <div class="stat-bar">
                 <div class="stat-bar-fill cost-fill" style="width:0%"></div>
               </div>
               <span class="stat-value" id="stat-cost">0</span>
             </div>
             <div class="stat-row">
-              <span class="stat-label">🔧 Durability</span>
+              <span class="stat-label" data-i18n="mod.durability">🔧 Durability</span>
               <div class="stat-bar">
                 <div class="stat-bar-fill dura-fill" style="width:0%"></div>
               </div>
@@ -372,47 +387,47 @@
       <!-- Bottom: real-time variable controls -->
       <div class="mini-card models-controls-card glow-card">
         <div class="card-header-row">
-          <div class="pill pill-ghost">Simulation Controls</div>
-          <span class="eyebrow">Adjust variables in real time</span>
+          <div class="pill pill-ghost" data-i18n="mod.simControls">Simulation Controls</div>
+          <span class="eyebrow" data-i18n="mod.adjustVars">Adjust variables in real time</span>
         </div>
         <div class="controls-grid">
           <div class="control-group">
-            <label for="sim-magnitude">🌊 Earthquake Magnitude</label>
+            <label for="sim-magnitude" data-i18n="mod.magnitude">🌊 Earthquake Magnitude</label>
             <input type="range" id="sim-magnitude" min="1" max="10" step="0.1" value="5.0" />
             <div class="control-readout"><span id="sim-magnitude-val">5.0</span> <small>Richter</small></div>
           </div>
           <div class="control-group">
-            <label for="sim-pga">📈 Peak Ground Accel.</label>
+            <label for="sim-pga" data-i18n="mod.peakAccel">📈 Peak Ground Accel.</label>
             <input type="range" id="sim-pga" min="0.01" max="1.5" step="0.01" value="0.25" />
             <div class="control-readout"><span id="sim-pga-val">0.25</span> <small>g</small></div>
           </div>
           <div class="control-group">
-            <label for="sim-soil">🏔️ Soil Amplification</label>
+            <label for="sim-soil" data-i18n="mod.soilAmp">🏔️ Soil Amplification</label>
             <input type="range" id="sim-soil" min="0.5" max="2.0" step="0.05" value="1.15" />
             <div class="control-readout"><span id="sim-soil-val">1.15</span> <small>×</small></div>
           </div>
           <div class="control-group">
-            <label for="sim-stories">🏢 Stories</label>
+            <label for="sim-stories" data-i18n="mod.stories">🏢 Stories</label>
             <input type="range" id="sim-stories" min="1" max="30" step="1" value="5" />
             <div class="control-readout"><span id="sim-stories-val">5</span></div>
           </div>
           <div class="control-group">
-            <label for="sim-duration">⏱️ Duration</label>
+            <label for="sim-duration" data-i18n="mod.duration">⏱️ Duration</label>
             <input type="range" id="sim-duration" min="1" max="60" step="1" value="15" />
             <div class="control-readout"><span id="sim-duration-val">15</span> <small>sec</small></div>
           </div>
           <div class="control-group">
-            <label for="sim-damping">🔧 Damping Ratio</label>
+            <label for="sim-damping" data-i18n="mod.damping">🔧 Damping Ratio</label>
             <input type="range" id="sim-damping" min="0.01" max="0.30" step="0.01" value="0.05" />
             <div class="control-readout"><span id="sim-damping-val">0.05</span></div>
           </div>
         </div>
         <div class="controls-actions">
-          <button type="button" id="sim-run-btn" class="sim-run-btn">▶ Run Simulation</button>
-          <button type="button" id="sim-reset-btn" class="sim-reset-btn">↺ Reset</button>
+          <button type="button" id="sim-run-btn" class="sim-run-btn" data-i18n="btn.runSim">▶ Run Simulation</button>
+          <button type="button" id="sim-reset-btn" class="sim-reset-btn" data-i18n="btn.reset">↺ Reset</button>
         </div>
         <div id="sim-result-bar" class="sim-result-bar" style="display:none;">
-          <span class="sim-result-label">Estimated Damage:</span>
+          <span class="sim-result-label" data-i18n="mod.estDamage">Estimated Damage:</span>
           <span class="sim-result-value" id="sim-damage-value">—</span>
           <span class="sim-result-rating" id="sim-damage-rating">—</span>
         </div>
@@ -421,20 +436,20 @@
       <!-- Simulation history (mock data) -->
       <div class="mini-card history-card glow-card">
         <div class="card-header-row">
-          <div class="pill pill-ghost">📋 Recent Simulations</div>
-          <span class="eyebrow">Mock history</span>
+          <div class="pill pill-ghost" data-i18n="mod.recentSim">📋 Recent Simulations</div>
+          <span class="eyebrow" data-i18n="mod.mockHistory">Mock history</span>
         </div>
         <div class="history-table-wrap">
           <table class="history-table" id="sim-history-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Model</th>
-                <th>Magnitude</th>
-                <th>PGA (g)</th>
-                <th>Stories</th>
-                <th>Damage</th>
-                <th>Rating</th>
+                <th data-i18n="th.num">#</th>
+                <th data-i18n="th.model">Model</th>
+                <th data-i18n="th.magnitude">Magnitude</th>
+                <th data-i18n="th.pgaG">PGA (g)</th>
+                <th data-i18n="th.stories">Stories</th>
+                <th data-i18n="th.damage">Damage</th>
+                <th data-i18n="th.rating">Rating</th>
               </tr>
             </thead>
             <tbody id="sim-history-body">
@@ -497,76 +512,1121 @@
         </div>
       </div>
 
+      <!-- Seismograph + Drift row -->
+      <div class="models-instruments-row">
+        <div class="mini-card glow-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" data-i18n="mod.seismograph">📈 Seismograph</div>
+            <span class="eyebrow" data-i18n="mod.liveAccel">Live ground acceleration</span>
+          </div>
+          <canvas id="seismo-canvas" width="600" height="140"
+            style="width:100%;height:140px;border-radius:8px;"></canvas>
+        </div>
+        <div class="mini-card glow-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" data-i18n="mod.drift">📐 Inter-Story Drift</div>
+            <span class="eyebrow" data-i18n="mod.perFloor">Per-floor displacement</span>
+          </div>
+          <canvas id="drift-canvas" width="400" height="240"
+            style="width:100%;height:240px;border-radius:8px;"></canvas>
+        </div>
+      </div>
+
       <!-- Quick comparison summary -->
       <div class="mini-card comparison-card glow-card">
         <div class="card-header-row">
-          <div class="pill pill-ghost">📊 Quick Comparison</div>
-          <span class="eyebrow">All 5 models at a glance</span>
+          <div class="pill pill-ghost" data-i18n="mod.quickCompare">📊 Quick Comparison</div>
+          <span class="eyebrow" data-i18n="mod.atGlance">All 5 models at a glance</span>
         </div>
         <div class="comparison-grid" id="comparison-grid">
           <!-- Populated by JS -->
         </div>
       </div>
+      <details class="tab-manual">
+        <summary data-i18n="manual.title">User Manual</summary>
+        <div class="manual-body">
+          <div class="lang-en">
+            <h4>Model Comparison Tab Guide</h4>
+            <p>Compare 5 structural systems under different earthquake scenarios using SDOF analysis.</p>
+            <h4>Models Available</h4>
+            <ul>
+              <li><strong>RC Frame</strong> — Most common in China; governed by GB 50011 ductility requirements.</li>
+              <li><strong>Steel Frame</strong> — Higher ductility; preferred for tall buildings in Sichuan.</li>
+              <li><strong>Timber Eco</strong> — Traditional Tibetan construction; limited to low-rise.</li>
+              <li><strong>Base Isolated</strong> — Recommended for hospitals/schools in high-seismicity zones.</li>
+              <li><strong>Hybrid Damper</strong> — Advanced system with viscous dampers + steel frame.</li>
+            </ul>
+            <h4>Key Metrics</h4>
+            <ul>
+              <li><strong>PGA</strong> — Peak Ground Acceleration in g (Wenchuan recorded 0.96g).</li>
+              <li><strong>Inter-story drift</strong> — Must stay below 2% for life-safety per most codes.</li>
+              <li><strong>Damage index</strong> — Park-Ang style index; &gt;60% indicates irreparable damage.</li>
+            </ul>
+          </div>
+          <div class="lang-zh-TW" style="display:none">
+            <h4>模型比較分頁指南</h4>
+            <p>使用 SDOF 分析在不同地震情境下比較 5 種結構系統。</p>
+            <h4>可用模型</h4>
+            <ul>
+              <li><strong>鋼筋混凝土構架</strong> — 中國最常見；受 GB 50011 延性要求規範。</li>
+              <li><strong>鋼構架</strong> — 延性更高；四川高層建築首選。</li>
+              <li><strong>木構（環保）</strong> — 傳統藏式建築；僅限低層。</li>
+              <li><strong>隔震結構</strong> — 推薦用於高震區醫院/學校。</li>
+              <li><strong>混合阻尼器</strong> — 黏滯阻尼器 + 鋼構架的先進系統。</li>
+            </ul>
+            <h4>關鍵指標</h4>
+            <ul>
+              <li><strong>PGA</strong> — 峰值地表加速度（汶川記錄 0.96g）。</li>
+              <li><strong>層間位移</strong> — 依多數規範，生命安全需低於 2%。</li>
+              <li><strong>損壞指數</strong> — Park-Ang 指數；&gt;60% 表示無法修復。</li>
+            </ul>
+          </div>
+          <div class="lang-zh-CN" style="display:none">
+            <h4>模型比较页签指南</h4>
+            <p>使用 SDOF 分析在不同地震情境下比较 5 种结构系统。</p>
+            <h4>可用模型</h4>
+            <ul>
+              <li><strong>钢筋混凝土框架</strong> — 中国最常见；受 GB 50011 延性要求规范。</li>
+              <li><strong>钢框架</strong> — 延性更高；四川高层建筑首选。</li>
+              <li><strong>木结构（环保）</strong> — 传统藏式建筑；仅限低层。</li>
+              <li><strong>隔震结构</strong> — 推荐用于高震区医院/学校。</li>
+              <li><strong>混合阻尼器</strong> — 粘滞阻尼器 + 钢框架的先进系统。</li>
+            </ul>
+            <h4>关键指标</h4>
+            <ul>
+              <li><strong>PGA</strong> — 峰值地表加速度（汶川记录 0.96g）。</li>
+              <li><strong>层间位移</strong> — 依多数规范，生命安全需低于 2%。</li>
+              <li><strong>损坏指数</strong> — Park-Ang 指数；&gt;60% 表示无法修复。</li>
+            </ul>
+          </div>
+        </div>
+      </details>
     </section>
 
-    <section class="card instructions-card tab-panel" data-tab="instructions" id="instructions">
+    <section class="card tab-panel collapse-panel" data-tab="collapse" id="collapse">
+      <!-- Header -->
       <div class="section-header">
-        <div class="pill">Step 3</div>
+        <div class="pill" data-i18n="pill.lab">Lab</div>
         <div>
-          <h2>Instructions</h2>
-          <p class="subtle">Follow the quick playbook to go from terrain to risk in under a minute.</p>
+          <h2 data-i18n-title="collapse.title">Collapse Simulation</h2>
+          <p class="subtle" data-i18n-sub="collapse.sub">Watch the cell-fractured building progressively collapse under
+            earthquake forces (M ≥ 8.0).
+          </p>
         </div>
-        <div class="pill pill-accent">Cheat sheet</div>
+        <span class="viewer-badge" id="collapse-status-badge" data-i18n="col.ready">Ready</span>
       </div>
 
-      <div class="instruction-grid">
-        <div class="mini-card">
-          <div class="card-header-row">
-            <div class="pill pill-ghost">Flow</div>
-            <span class="eyebrow">End-to-end</span>
+      <!-- Full-width 3D Viewer -->
+      <div class="collapse-viewer-wrap">
+        <div id="collapse-3d-container">
+          <canvas id="collapse-3d-canvas"></canvas>
+          <canvas id="collapse-dust-canvas"></canvas>
+          <div class="viewer-overlay" id="collapse-overlay">
+            <span class="viewer-overlay-text" data-i18n="col.loading">Loading model…</span>
           </div>
-          <ol class="step-list">
-            <li><strong>Terrain + 3D:</strong> upload DEM/DXF, set slope hint, and check the live massing card.</li>
-            <li><strong>Building:</strong> set stories, bay sizes, material, importance; keep slope consistent.</li>
-            <li><strong>Analyze:</strong> click "Compute risk score" or export SAP2000 <code>.s2k</code>.</li>
-          </ol>
-          <div class="callout">Tip: slope drives both terrain factor and risk score—match it across tabs.</div>
+          <!-- Damage heatmap legend -->
+          <div id="collapse-heatmap-legend" class="heatmap-legend" style="display:none;">
+            <span class="heatmap-label" data-i18n="col.damage">Damage</span>
+            <div class="heatmap-bar"></div>
+            <div class="heatmap-ticks"><span>0%</span><span>50%</span><span>100%</span></div>
+          </div>
         </div>
-
-        <div class="mini-card">
-          <div class="card-header-row">
-            <div class="pill pill-ghost">Run locally</div>
-            <span class="eyebrow">Dev</span>
-          </div>
-          <ul class="bullet-list">
-            <li><strong>Backend:</strong> <code>uvicorn app.main:app --reload --port 8000</code> (from
-              <code>backend</code>).
-            </li>
-            <li><strong>Frontend:</strong> <code>python -m http.server 5173</code> (from <code>frontend</code>), then
-              open <code>http://localhost:5173/</code>.</li>
-          </ul>
-          <p class="microcopy">You can also open <code>index.html</code> directly for a quick static preview.</p>
-        </div>
-
-        <div class="mini-card">
-          <div class="card-header-row">
-            <div class="pill pill-ghost">Outputs</div>
-            <span class="eyebrow">What you get</span>
-          </div>
-          <ul class="bullet-list">
-            <li>Terrain slope factor from the upload endpoint.</li>
-            <li>Risk JSON for the current massing + site.</li>
-            <li>SAP2000 starter file (<code>.s2k</code>) for concept export.</li>
-          </ul>
+        <div class="collapse-sim-bar" id="collapse-sim-status" data-i18n="col.magThreshold">Magnitude threshold: 8.0
         </div>
       </div>
+
+      <!-- Controls strip -->
+      <div class="collapse-controls-strip">
+        <div class="control-group">
+          <label for="collapse-magnitude" data-i18n="col.magnitude">Magnitude</label>
+          <input type="range" id="collapse-magnitude" min="1" max="10" step="0.1" value="6.0" />
+          <div class="control-readout"><span id="collapse-magnitude-val">6.0</span> <small>Richter</small></div>
+        </div>
+        <div class="control-group">
+          <label for="collapse-duration" data-i18n="col.duration">Duration</label>
+          <input type="range" id="collapse-duration" min="2" max="40" step="1" value="18" />
+          <div class="control-readout"><span id="collapse-duration-val">18</span> <small>sec</small></div>
+        </div>
+        <div class="control-group">
+          <label for="collapse-crack" data-i18n="col.crackHeight">Crack Height</label>
+          <input type="range" id="collapse-crack" min="0.2" max="0.8" step="0.05" value="0.45" />
+          <div class="control-readout"><span id="collapse-crack-val">45</span> <small>%</small></div>
+        </div>
+        <div class="collapse-actions">
+          <button type="button" id="collapse-run-btn" class="sim-run-btn" data-i18n="btn.run">▶ Run</button>
+          <button type="button" id="collapse-reset-btn" class="sim-reset-btn" data-i18n="btn.reset">↺ Reset</button>
+          <button type="button" id="collapse-replay-btn" class="sim-replay-btn" data-i18n="btn.replay"
+            style="display:none;">⏪ Replay</button>
+        </div>
+      </div>
+
+      <!-- Result bar -->
+      <div id="collapse-result-bar" class="sim-result-bar" style="display:none;">
+        <span class="sim-result-label" data-i18n="col.state">State:</span>
+        <span class="sim-result-value" id="collapse-state-value">—</span>
+        <span class="sim-result-rating" id="collapse-state-rating">—</span>
+      </div>
+
+      <!-- Stats + Timeline row -->
+      <div class="collapse-bottom-row">
+        <div class="mini-card glow-card collapse-stats-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost">📊 Collapse Stats</div>
+          </div>
+          <div class="collapse-stats-grid" id="collapse-stats-grid">
+            <div class="collapse-stat-item">
+              <span class="collapse-stat-num" id="cs-pieces-total">—</span>
+              <span class="collapse-stat-label" data-i18n="col.totalPieces">Total Pieces</span>
+            </div>
+            <div class="collapse-stat-item">
+              <span class="collapse-stat-num" id="cs-pieces-detached">—</span>
+              <span class="collapse-stat-label" data-i18n="col.detached">Detached</span>
+            </div>
+            <div class="collapse-stat-item">
+              <span class="collapse-stat-num" id="cs-pieces-grounded">—</span>
+              <span class="collapse-stat-label" data-i18n="col.grounded">Grounded</span>
+            </div>
+            <div class="collapse-stat-item">
+              <span class="collapse-stat-num" id="cs-max-velocity">—</span>
+              <span class="collapse-stat-label" data-i18n="col.peakVel">Peak Velocity</span>
+            </div>
+            <div class="collapse-stat-item">
+              <span class="collapse-stat-num" id="cs-energy">—</span>
+              <span class="collapse-stat-label" data-i18n="col.energy">Energy (kJ)</span>
+            </div>
+            <div class="collapse-stat-item">
+              <span class="collapse-stat-num" id="cs-crack-pct">—</span>
+              <span class="collapse-stat-label" data-i18n="col.crackPct">Crack Height</span>
+            </div>
+          </div>
+        </div>
+        <div class="mini-card glow-card collapse-timeline-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" data-i18n="col.timeline">📈 Shake Timeline</div>
+          </div>
+          <canvas id="collapse-shake-canvas" width="500" height="140"></canvas>
+        </div>
+      </div>
+      <details class="tab-manual">
+        <summary data-i18n="manual.title">User Manual</summary>
+        <div class="manual-body">
+          <div class="lang-en">
+            <h4>Collapse Lab Guide</h4>
+            <p>Simulate progressive collapse of a cell-fractured building model under earthquake shaking.</p>
+            <h4>How to Use</h4>
+            <ol>
+              <li>Set <strong>Magnitude</strong> ≥ 8.0 to trigger collapse (threshold based on Wenchuan M7.9).</li>
+              <li>Adjust <strong>Duration</strong> — typical strong-motion duration for Himalayan thrust events: 15–40s.
+              </li>
+              <li><strong>Crack Height</strong> — controls where the building fractures; relates to soft-story failure
+                level.</li>
+              <li>Click <strong>Run</strong> and observe progressive wave-front collapse propagation.</li>
+            </ol>
+            <h4>Civil Engineering Context</h4>
+            <ul>
+              <li>Wenchuan 2008: 90% of non-ductile RC frames in Beichuan showed pancake collapse.</li>
+              <li>Gorkha 2015: Unreinforced masonry was most vulnerable; modern RC frames survived.</li>
+              <li>The crack-formation pattern simulates construction joint failures common in poor-quality concrete.
+              </li>
+            </ul>
+          </div>
+          <div class="lang-zh-TW" style="display:none">
+            <h4>倒塌實驗室指南</h4>
+            <p>模擬細胞碎裂建築模型在地震搖晃下的漸進式倒塌。</p>
+            <h4>使用方法</h4>
+            <ol>
+              <li>設定<strong>規模</strong> ≥ 8.0 以觸發倒塌（門檻基於汶川 M7.9）。</li>
+              <li>調整<strong>持續時間</strong>——喜馬拉雅逆衝事件典型強震持續 15–40 秒。</li>
+              <li><strong>裂縫高度</strong>——控制建築斷裂位置；與軟弱層破壞層級相關。</li>
+              <li>點擊<strong>執行</strong>觀察漸進式波前倒塌傳播。</li>
+            </ol>
+            <h4>土木工程背景</h4>
+            <ul>
+              <li>汶川 2008：北川 90% 非延性 RC 構架呈鬆餅式倒塌。</li>
+              <li>尼泊爾 2015：無筋砌體最脆弱；現代 RC 構架倖存。</li>
+              <li>裂縫形成模式模擬劣質混凝土中常見的施工縫破壞。</li>
+            </ul>
+          </div>
+          <div class="lang-zh-CN" style="display:none">
+            <h4>倒塌实验室指南</h4>
+            <p>模拟细胞碎裂建筑模型在地震摇晃下的渐进式倒塌。</p>
+            <h4>使用方法</h4>
+            <ol>
+              <li>设定<strong>震级</strong> ≥ 8.0 以触发倒塌（阈值基于汶川 M7.9）。</li>
+              <li>调整<strong>持续时间</strong>——喜马拉雅逆冲事件典型强震持续 15–40 秒。</li>
+              <li><strong>裂缝高度</strong>——控制建筑断裂位置；与软弱层破坏层级相关。</li>
+              <li>点击<strong>执行</strong>观察渐进式波前倒塌传播。</li>
+            </ol>
+            <h4>土木工程背景</h4>
+            <ul>
+              <li>汶川 2008：北川 90% 非延性 RC 框架呈煎饼式倒塌。</li>
+              <li>尼泊尔 2015：无筋砌体最脆弱；现代 RC 框架幸存。</li>
+              <li>裂缝形成模式模拟劣质混凝土中常见的施工缝破坏。</li>
+            </ul>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ═══════ SEISMIC WAVE VISUALIZER TAB ═══════ -->
+    <section class="card tab-panel waves-panel" data-tab="waves" id="waves">
+      <div class="section-header">
+        <div class="pill" data-i18n="pill.waves">Waves</div>
+        <div>
+          <h2 data-i18n-title="waves.title">Seismic Wave Visualizer</h2>
+          <p class="subtle" data-i18n-sub="waves.sub">Watch P-wave, S-wave, and Surface wave propagation in real-time
+            with adjustable parameters.
+          </p>
+        </div>
+        <div class="pill pill-accent" data-i18n="pill.interactive">Interactive</div>
+      </div>
+
+      <div class="waves-main-grid">
+        <!-- Wave canvas -->
+        <div class="mini-card glow-card waves-canvas-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" data-i18n="wav.propView">Propagation View</div>
+            <span class="eyebrow" id="waves-status">Ready</span>
+          </div>
+          <canvas id="waves-canvas" width="1800" height="840"></canvas>
+          <div class="waves-legend">
+            <span><span class="legend-dot" style="background:#ef4444"></span> <span data-i18n="wav.pWaveLegend">P-Wave
+                (Primary)</span></span>
+            <span><span class="legend-dot" style="background:#3b82f6"></span> <span data-i18n="wav.sWaveLegend">S-Wave
+                (Secondary)</span></span>
+            <span><span class="legend-dot" style="background:#f59e0b"></span> <span
+                data-i18n="wav.surfaceLegend">Surface Wave</span></span>
+          </div>
+        </div>
+
+        <!-- Wave info cards -->
+        <div class="mini-card glow-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" data-i18n="wav.waveInfo">Wave Info</div>
+          </div>
+          <div class="wave-info-grid">
+            <div class="wave-info-item" style="border-left:3px solid #ef4444">
+              <h4 data-i18n="wav.pWaveTitle">P-Wave</h4>
+              <p class="subtle" data-i18n="wav.pWaveDesc">Compressional (longitudinal). Fastest wave, arrives first.
+                Travels through solids and
+                liquids. Speed: 5–8 km/s.</p>
+              <div class="wave-stat-row">
+                <span data-i18n="wav.amplitude">Amplitude</span>
+                <span class="wave-stat-val" id="waves-p-amp">0.0</span>
+              </div>
+            </div>
+            <div class="wave-info-item" style="border-left:3px solid #3b82f6">
+              <h4 data-i18n="wav.sWaveTitle">S-Wave</h4>
+              <p class="subtle" data-i18n="wav.sWaveDesc">Shear (transverse). Slower than P-wave. Only travels through
+                solids. Speed: 3–5 km/s.
+                Causes more damage.</p>
+              <div class="wave-stat-row">
+                <span data-i18n="wav.amplitude">Amplitude</span>
+                <span class="wave-stat-val" id="waves-s-amp">0.0</span>
+              </div>
+            </div>
+            <div class="wave-info-item" style="border-left:3px solid #f59e0b">
+              <h4 data-i18n="wav.surfaceTitle">Surface Wave</h4>
+              <p class="subtle" data-i18n="wav.surfaceDesc">Rayleigh & Love waves. Slowest but most destructive. Travel
+                along Earth's surface.
+                Speed: 2–4 km/s.</p>
+              <div class="wave-stat-row">
+                <span data-i18n="wav.amplitude">Amplitude</span>
+                <span class="wave-stat-val" id="waves-surf-amp">0.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="mini-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost" data-i18n="wav.controls">Controls</div>
+        </div>
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="waves-magnitude" data-i18n="wav.magnitude">Magnitude</label>
+            <input type="range" id="waves-magnitude" min="1" max="10" step="0.1" value="6.0" />
+            <div class="control-readout"><span id="waves-mag-val">6.0</span></div>
+          </div>
+          <div class="control-group">
+            <label for="waves-depth" data-i18n="wav.depth">Depth (km)</label>
+            <input type="range" id="waves-depth" min="1" max="300" step="1" value="30" />
+            <div class="control-readout"><span id="waves-depth-val">30</span></div>
+          </div>
+          <div class="control-group">
+            <label for="waves-distance" data-i18n="wav.distance">Distance (km)</label>
+            <input type="range" id="waves-distance" min="10" max="500" step="5" value="100" />
+            <div class="control-readout"><span id="waves-dist-val">100</span></div>
+          </div>
+          <div class="control-group">
+            <label for="waves-soil" data-i18n="wav.soilType">Soil Type</label>
+            <select id="waves-soil">
+              <option value="rock" data-i18n="wav.rock">Rock</option>
+              <option value="stiff" selected data-i18n="wav.stiffSoil">Stiff Soil</option>
+              <option value="soft" data-i18n="wav.softSoil">Soft Soil</option>
+            </select>
+          </div>
+        </div>
+        <div class="controls-actions">
+          <button type="button" id="waves-run-btn" class="sim-run-btn" data-i18n="btn.startWaves">▶ Start Waves</button>
+          <button type="button" id="waves-reset-btn" class="sim-reset-btn" data-i18n="btn.reset">↺ Reset</button>
+        </div>
+      </div>
+
+      <!-- Arrival time readout -->
+      <div class="mini-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost" data-i18n="wav.arrivals">Arrival Times</div>
+        </div>
+        <div class="collapse-stats-grid" id="waves-arrivals">
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="wa-p-time">—</span><span
+              class="collapse-stat-label" data-i18n="wav.pWave">P-Wave (s)</span></div>
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="wa-s-time">—</span><span
+              class="collapse-stat-label" data-i18n="wav.sWave">S-Wave (s)</span></div>
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="wa-surf-time">—</span><span
+              class="collapse-stat-label" data-i18n="wav.surface">Surface (s)</span></div>
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="wa-s-p-lag">—</span><span
+              class="collapse-stat-label" data-i18n="wav.spLag">S-P Lag (s)</span></div>
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="wa-peak-acc">—</span><span
+              class="collapse-stat-label" data-i18n="wav.peakAccel">Peak Accel.</span></div>
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="wa-intensity">—</span><span
+              class="collapse-stat-label" data-i18n="wav.mmiIntensity">MMI Intensity</span></div>
+        </div>
+      </div>
+      <details class="tab-manual">
+        <summary data-i18n="manual.title">User Manual</summary>
+        <div class="manual-body">
+          <div class="lang-en">
+            <h4>Seismic Wave Visualizer Guide</h4>
+            <p>Visualize P-wave, S-wave, and Surface wave propagation from an earthquake source.</p>
+            <h4>Parameters</h4>
+            <ul>
+              <li><strong>Magnitude</strong> — Controls wave energy. Himalayan events: typically M6.5–8.5.</li>
+              <li><strong>Depth</strong> — Shallow (&lt;20km) produce stronger surface shaking. Himalayan thrust events
+                are often 10–20km deep.</li>
+              <li><strong>Distance</strong> — Epicentral distance. Kathmandu is ~80km from the MHT rupture zone.</li>
+              <li><strong>Soil Type</strong> — Soft soil (like Kathmandu lacustrine clay) amplifies waves 3–5×.</li>
+            </ul>
+            <h4>Wave Types Explained</h4>
+            <ul>
+              <li><strong>P-wave</strong> (Primary) — Fastest; compressional; causes vertical building motion.</li>
+              <li><strong>S-wave</strong> (Shear) — Slower but more damaging; horizontal motion damages columns.</li>
+              <li><strong>Surface wave</strong> — Slowest, most destructive; Rayleigh waves cause rolling ground motion.
+              </li>
+            </ul>
+            <div class="manual-tip">Tip: The S-P time lag is used by seismologists to estimate epicentral distance — you
+              can verify this with the readout values.</div>
+          </div>
+          <div class="lang-zh-TW" style="display:none">
+            <h4>地震波視覺化指南</h4>
+            <p>視覺化地震源發出的 P 波、S 波和表面波傳播。</p>
+            <h4>參數</h4>
+            <ul>
+              <li><strong>規模</strong> — 控制波能量。喜馬拉雅事件通常 M6.5–8.5。</li>
+              <li><strong>深度</strong> — 淺層（&lt;20km）產生更強的地表搖晃。喜馬拉雅逆衝事件常為 10–20km 深。</li>
+              <li><strong>距離</strong> — 震央距離。加德滿都距 MHT 破裂帶約 80km。</li>
+              <li><strong>土壤類型</strong> — 軟土（如加德滿都湖相黏土）放大波 3–5 倍。</li>
+            </ul>
+            <h4>波類型說明</h4>
+            <ul>
+              <li><strong>P 波</strong>（縱波） — 最快；壓縮波；導致建築垂直運動。</li>
+              <li><strong>S 波</strong>（橫波） — 較慢但破壞力更強；水平運動損壞柱體。</li>
+              <li><strong>表面波</strong> — 最慢、破壞力最大；瑞利波導致地面滾動。</li>
+            </ul>
+            <div class="manual-tip">提示：S-P 時差用於估算震央距離——您可用讀數值驗證。</div>
+          </div>
+          <div class="lang-zh-CN" style="display:none">
+            <h4>地震波可视化指南</h4>
+            <p>可视化地震源发出的 P 波、S 波和表面波传播。</p>
+            <h4>参数</h4>
+            <ul>
+              <li><strong>震级</strong> — 控制波能量。喜马拉雅事件通常 M6.5–8.5。</li>
+              <li><strong>深度</strong> — 浅层（&lt;20km）产生更强的地表摇晃。喜马拉雅逆冲事件常为 10–20km 深。</li>
+              <li><strong>距离</strong> — 震中距离。加德满都距 MHT 破裂带约 80km。</li>
+              <li><strong>土壤类型</strong> — 软土（如加德满都湖相黏土）放大波 3–5 倍。</li>
+            </ul>
+            <h4>波类型说明</h4>
+            <ul>
+              <li><strong>P 波</strong>（纵波） — 最快；压缩波；导致建筑垂直运动。</li>
+              <li><strong>S 波</strong>（横波） — 较慢但破坏力更强；水平运动损坏柱体。</li>
+              <li><strong>表面波</strong> — 最慢、破坏力最大；瑞利波导致地面滚动。</li>
+            </ul>
+            <div class="manual-tip">提示：S-P 时差用于估算震中距离——您可用读数值验证。</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ═══════ BUILDING DESIGNER TAB ═══════ -->
+    <section class="card tab-panel designer-panel" data-tab="designer" id="designer">
+      <div class="section-header">
+        <div class="pill" data-i18n="pill.design">Design</div>
+        <div>
+          <h2 data-i18n-title="designer.title">Building Designer</h2>
+          <p class="subtle" data-i18n-sub="designer.sub">Customize building parameters, materials, and foundation type;
+            then test your design in the
+            Collapse Lab.</p>
+        </div>
+        <div class="pill pill-accent" data-i18n="pill.customBuild">Custom Build</div>
+      </div>
+
+      <div class="designer-grid">
+        <!-- Structure params -->
+        <div class="mini-card glow-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" data-i18n="des.structure">Structure</div>
+            <span class="eyebrow" data-i18n="des.geometry">Geometry</span>
+          </div>
+          <div class="stacked-form">
+            <label><span data-i18n="des.bldgName">Building Name</span> <input type="text" id="des-name"
+                value="My Building" /></label>
+            <div class="two-col">
+              <label><span data-i18n="des.floors">Floors</span> <input type="number" id="des-floors" value="8" min="1"
+                  max="60" /></label>
+              <label><span data-i18n="des.floorH">Floor Height (m)</span> <input type="number" id="des-floor-h"
+                  value="3.2" step="0.1" min="2" max="6" /></label>
+            </div>
+            <div class="two-col">
+              <label><span data-i18n="des.width">Width (m)</span> <input type="number" id="des-width" value="20"
+                  step="0.5" min="5" max="80" /></label>
+              <label><span data-i18n="des.depth">Depth (m)</span> <input type="number" id="des-depth" value="15"
+                  step="0.5" min="5" max="80" /></label>
+            </div>
+            <label><span data-i18n="des.shape">Shape</span>
+              <select id="des-shape">
+                <option value="rectangular" data-i18n="opt.rectangular">Rectangular</option>
+                <option value="l-shape" data-i18n="opt.lShape">L-Shape</option>
+                <option value="u-shape" data-i18n="opt.uShape">U-Shape</option>
+                <option value="tower" data-i18n="opt.tower">Tower (1:3+ ratio)</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <!-- Material + Foundation -->
+        <div class="mini-card glow-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" data-i18n="des.matFound">Material & Foundation</div>
+            <span class="eyebrow" data-i18n="des.structSys">Structural system</span>
+          </div>
+          <div class="stacked-form">
+            <label><span data-i18n="des.primaryMat">Primary Material</span>
+              <select id="des-material">
+                <option value="rc" data-i18n="opt.reinforcedConcrete">Reinforced Concrete</option>
+                <option value="steel" data-i18n="opt.steelFrame">Steel Frame</option>
+                <option value="timber" data-i18n="opt.timber">Timber</option>
+                <option value="masonry" data-i18n="opt.masonry">Masonry</option>
+                <option value="composite" data-i18n="opt.composite">Composite (Steel+RC)</option>
+              </select>
+            </label>
+            <label><span data-i18n="des.foundType">Foundation Type</span>
+              <select id="des-foundation">
+                <option value="shallow" data-i18n="opt.shallow">Shallow (Spread/Mat)</option>
+                <option value="deep" data-i18n="opt.deep">Deep (Pile)</option>
+                <option value="isolated" data-i18n="opt.isolated">Base Isolated</option>
+                <option value="damped" data-i18n="opt.damped">Damped Foundation</option>
+              </select>
+            </label>
+            <label><span data-i18n="des.lateralSys">Lateral System</span>
+              <select id="des-lateral">
+                <option value="moment-frame" data-i18n="opt.momentFrame">Moment Frame</option>
+                <option value="shear-wall" data-i18n="opt.shearWall">Shear Wall</option>
+                <option value="braced-frame" data-i18n="opt.bracedFrame">Braced Frame</option>
+                <option value="dual" data-i18n="opt.dual">Dual System</option>
+              </select>
+            </label>
+            <label><span data-i18n="des.seismicCode">Seismic Design Code</span>
+              <select id="des-code">
+                <option value="ibc" data-i18n="opt.ibc">IBC 2021</option>
+                <option value="eurocode" data-i18n="opt.eurocode">Eurocode 8</option>
+                <option value="nscp" data-i18n="opt.nscp">NSCP 2015</option>
+                <option value="none" data-i18n="opt.noCode">No Code (Pre-code)</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <!-- 3D Preview -->
+        <div class="mini-card glow-card designer-preview-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" data-i18n="des.3dPreview">3D Preview</div>
+            <span class="eyebrow" id="des-preview-label">8-story Rectangular</span>
+          </div>
+          <canvas id="designer-canvas" width="500" height="400"></canvas>
+          <div class="designer-readouts">
+            <div class="collapse-stat-item"><span class="collapse-stat-num" id="des-total-area">—</span><span
+                class="collapse-stat-label" data-i18n="des.floorArea">Floor Area (m²)</span></div>
+            <div class="collapse-stat-item"><span class="collapse-stat-num" id="des-total-height">—</span><span
+                class="collapse-stat-label" data-i18n="des.totalH">Total Height (m)</span></div>
+            <div class="collapse-stat-item"><span class="collapse-stat-num" id="des-weight">—</span><span
+                class="collapse-stat-label" data-i18n="des.weight">Est. Weight (t)</span></div>
+            <div class="collapse-stat-item"><span class="collapse-stat-num" id="des-period">—</span><span
+                class="collapse-stat-label" data-i18n="des.period">Fund. Period (s)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Design Assessment -->
+      <div class="mini-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost" data-i18n="des.seismicReady">Seismic Readiness</div>
+          <span class="eyebrow" data-i18n="des.quickAssess">Quick assessment</span>
+        </div>
+        <div id="des-assessment" class="des-assessment">
+          <div class="des-score-circle" id="des-score-circle">
+            <span id="des-score-num">—</span>
+            <span class="des-score-label">/ 100</span>
+          </div>
+          <div class="des-factors" id="des-factors">
+            <div class="des-factor"><span data-i18n="des.irregularity">Irregularity</span><span id="des-f-irreg"
+                class="rating-badge low" data-i18n="des.regular">Regular</span></div>
+            <div class="des-factor"><span data-i18n="des.softStory">Soft Story Risk</span><span id="des-f-soft"
+                class="rating-badge low" data-i18n="des.low">Low</span></div>
+            <div class="des-factor"><span data-i18n="des.overturn">Overturning Moment</span><span id="des-f-overturn"
+                class="rating-badge low" data-i18n="des.ok">OK</span></div>
+            <div class="des-factor"><span data-i18n="des.foundMatch">Foundation Match</span><span id="des-f-found"
+                class="rating-badge low" data-i18n="des.good">Good</span></div>
+            <div class="des-factor"><span data-i18n="des.codeComply">Code Compliance</span><span id="des-f-code"
+                class="rating-badge low" data-i18n="des.compliant">Compliant</span></div>
+          </div>
+        </div>
+        <div class="controls-actions" style="margin-top:1rem">
+          <button type="button" id="des-assess-btn" class="sim-run-btn" data-i18n="btn.assessDesign">📐 Assess
+            Design</button>
+          <button type="button" id="des-export-btn" class="sim-reset-btn" data-i18n="btn.sendCollapse">📤 Send to
+            Collapse Lab</button>
+        </div>
+      </div>
+      <details class="tab-manual">
+        <summary data-i18n="manual.title">User Manual</summary>
+        <div class="manual-body">
+          <div class="lang-en">
+            <h4>Building Designer Guide</h4>
+            <p>Design a building parametrically and assess its seismic readiness score.</p>
+            <h4>Design Parameters</h4>
+            <ul>
+              <li><strong>Shape</strong> — L-shape and U-shape introduce plan irregularity, penalized in seismic codes.
+              </li>
+              <li><strong>Materials</strong> — Masonry (common in Nepal) is weakest; Composite offers best performance.
+              </li>
+              <li><strong>Foundation</strong> — Base Isolated adds +20 score; required for critical facilities in Zone
+                V.</li>
+              <li><strong>Seismic Code</strong> — GB 50011 (China), NBC-105 (Nepal), IS:1893 (India) are relevant for
+                Himalayan region.</li>
+            </ul>
+            <h4>Assessment Criteria</h4>
+            <ul>
+              <li><strong>Irregularity</strong> — Torsional effects from L/U shapes increase collapse risk.</li>
+              <li><strong>Soft Story</strong> — Open ground floors (common in Nepal shops) create weak stories.</li>
+              <li><strong>Overturning</strong> — Height-to-width ratio &gt;4 is dangerous in high-seismicity zones.</li>
+              <li><strong>Foundation Match</strong> — Deep piles needed for &gt;12 floors in Himalayan alluvial soils.
+              </li>
+            </ul>
+          </div>
+          <div class="lang-zh-TW" style="display:none">
+            <h4>建築設計器指南</h4>
+            <p>參數化設計建築並評估其抗震準備度分數。</p>
+            <h4>設計參數</h4>
+            <ul>
+              <li><strong>形狀</strong> — L 形和 U 形引入平面不規則性，在抗震規範中會被扣分。</li>
+              <li><strong>材料</strong> — 砌體（尼泊爾常見）最弱；複合材料性能最佳。</li>
+              <li><strong>基礎</strong> — 隔震基礎加 20 分；V 級區域關鍵設施必須使用。</li>
+              <li><strong>規範</strong> — GB 50011（中國）、NBC-105（尼泊爾）、IS:1893（印度）適用於喜馬拉雅區域。</li>
+            </ul>
+            <h4>評估標準</h4>
+            <ul>
+              <li><strong>不規則性</strong> — L/U 形狀的扭轉效應增加倒塌風險。</li>
+              <li><strong>軟弱層</strong> — 開放式底層（尼泊爾商店常見）形成薄弱層。</li>
+              <li><strong>傾覆</strong> — 高寬比 &gt;4 在高震區危險。</li>
+              <li><strong>基礎匹配</strong> — 喜馬拉雅沖積土中 &gt;12 層需深樁基礎。</li>
+            </ul>
+          </div>
+          <div class="lang-zh-CN" style="display:none">
+            <h4>建筑设计器指南</h4>
+            <p>参数化设计建筑并评估其抗震准备度分数。</p>
+            <h4>设计参数</h4>
+            <ul>
+              <li><strong>形状</strong> — L 形和 U 形引入平面不规则性，在抗震规范中会被扣分。</li>
+              <li><strong>材料</strong> — 砌体（尼泊尔常见）最弱；复合材料性能最佳。</li>
+              <li><strong>基础</strong> — 隔震基础加 20 分；V 级区域关键设施必须使用。</li>
+              <li><strong>规范</strong> — GB 50011（中国）、NBC-105（尼泊尔）、IS:1893（印度）适用于喜马拉雅区域。</li>
+            </ul>
+            <h4>评估标准</h4>
+            <ul>
+              <li><strong>不规则性</strong> — L/U 形状的扭转效应增加倒塌风险。</li>
+              <li><strong>软弱层</strong> — 开放式底层（尼泊尔商店常见）形成薄弱层。</li>
+              <li><strong>倾覆</strong> — 高宽比 &gt;4 在高震区危险。</li>
+              <li><strong>基础匹配</strong> — 喜马拉雅冲积土中 &gt;12 层需深桩基础。</li>
+            </ul>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ═══════ EARTHQUAKE HISTORY TAB ═══════ -->
+    <section class="card tab-panel history-panel" data-tab="history" id="history">
+      <div class="section-header">
+        <div class="pill" data-i18n="pill.history">History</div>
+        <div>
+          <h2 data-i18n-title="history.title">Earthquake History</h2>
+          <p class="subtle" data-i18n-sub="history.sub">Browse significant historical earthquakes with magnitude,
+            location, casualties, and mapped
+            epicenters.</p>
+        </div>
+        <div class="pill pill-accent" data-i18n="pill.database">Database</div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="mini-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost" data-i18n="hist.filter">Filter</div>
+        </div>
+        <div class="history-filter-row">
+          <label><span data-i18n="hist.minMag">Min Magnitude</span> <input type="number" id="hist-min-mag" value="6.0"
+              step="0.1" min="1" max="10" /></label>
+          <label><span data-i18n="hist.region">Region</span>
+            <select id="hist-region">
+              <option value="all" data-i18n="hist.allRegions">All Regions</option>
+              <option value="himalayan" selected data-i18n="hist.himalayan">Himalayan (Tibet/Sichuan/Nepal)</option>
+              <option value="pacific" data-i18n="hist.pacific">Pacific Ring of Fire</option>
+              <option value="mediterranean" data-i18n="hist.mediterranean">Mediterranean</option>
+              <option value="asia" data-i18n="hist.asiaOther">Asia (Other)</option>
+              <option value="americas" data-i18n="hist.americas">Americas</option>
+            </select>
+          </label>
+          <label><span data-i18n="hist.yearRange">Year Range</span>
+            <select id="hist-year">
+              <option value="all" data-i18n="hist.allTime">All Time</option>
+              <option value="2000">2000–Present</option>
+              <option value="1950">1950–Present</option>
+              <option value="1900">1900–Present</option>
+            </select>
+          </label>
+          <button type="button" id="hist-filter-btn" class="sim-run-btn" data-i18n="btn.filter"
+            style="align-self:end">Filter</button>
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div class="mini-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost" data-i18n="hist.epicenter">Epicenter Map</div>
+          <span class="eyebrow" id="hist-count">30 events</span>
+        </div>
+        <div id="history-map" style="width:100%;height:480px;border-radius:10px;overflow:hidden;"></div>
+      </div>
+
+      <!-- Table -->
+      <div class="mini-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost" data-i18n="hist.eventTable">Event Table</div>
+        </div>
+        <div class="history-table-wrap">
+          <table class="history-table" id="hist-table">
+            <thead>
+              <tr>
+                <th data-i18n="hist.year">Year</th>
+                <th data-i18n="hist.location">Location</th>
+                <th data-i18n="hist.magnitude">Magnitude</th>
+                <th data-i18n="hist.depthKm">Depth (km)</th>
+                <th data-i18n="hist.casualties">Casualties</th>
+                <th data-i18n="hist.mmi">MMI</th>
+                <th data-i18n="hist.tsunami">Tsunami</th>
+              </tr>
+            </thead>
+            <tbody id="hist-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Stats summary -->
+      <div class="mini-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost" data-i18n="hist.statistics">Statistics</div>
+        </div>
+        <div class="collapse-stats-grid">
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="hist-total">—</span><span <span
+              class="collapse-stat-label" data-i18n="hist.totalEvents">Total Events</span></div>
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="hist-avg-mag">—</span><span
+              class="collapse-stat-label" data-i18n="hist.avgMag">Avg Magnitude</span></div>
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="hist-max-mag">—</span><span
+              class="collapse-stat-label" data-i18n="hist.maxMag">Max Magnitude</span></div>
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="hist-casualties">—</span><span
+              class="collapse-stat-label" data-i18n="hist.totalCasualties">Total Casualties</span></div>
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="hist-tsunamis">—</span><span
+              class="collapse-stat-label" data-i18n="hist.tsunamis">Tsunamis</span></div>
+          <div class="collapse-stat-item"><span class="collapse-stat-num" id="hist-deadliest">—</span><span
+              class="collapse-stat-label" data-i18n="hist.deadliest">Deadliest</span></div>
+        </div>
+      </div>
+      <details class="tab-manual">
+        <summary data-i18n="manual.title">User Manual</summary>
+        <div class="manual-body">
+          <div class="lang-en">
+            <h4>Earthquake History Guide</h4>
+            <p>Interactive Leaflet map showing historical earthquakes with civil engineering data.</p>
+            <h4>Features</h4>
+            <ul>
+              <li><strong>Map</strong> — Click markers for detailed CE data: soil type, fault type, PGA, liquefaction,
+                building &amp; bridge damage.</li>
+              <li><strong>Fault lines</strong> — Red dashed lines show major faults: Main Himalayan Thrust (MHT),
+                Longmenshan, Xianshuihe.</li>
+              <li><strong>Table</strong> — Click any row to fly to that earthquake's location on the map.</li>
+              <li><strong>Himalayan filter</strong> — Default to show 14 events in the Tibet/Sichuan/Nepal region.</li>
+            </ul>
+            <h4>Civil Engineering Data Fields</h4>
+            <ul>
+              <li><strong>Peak PGA</strong> — Maximum recorded ground acceleration (Wenchuan: 0.96g).</li>
+              <li><strong>Liquefaction</strong> — Soil liquefaction occurred (critical for foundation design).</li>
+              <li><strong>CE Note</strong> — Key engineering lesson learned from each event.</li>
+            </ul>
+            <div class="manual-tip">Tip: The unruptured western Nepal seismic gap (M8+) is critical for future hazard
+              assessment — see the 1505 Lo Mustang event.</div>
+          </div>
+          <div class="lang-zh-TW" style="display:none">
+            <h4>地震歷史指南</h4>
+            <p>互動式 Leaflet 地圖顯示歷史地震與土木工程資料。</p>
+            <h4>功能</h4>
+            <ul>
+              <li><strong>地圖</strong> — 點擊標記查看詳細工程資料：土壤類型、斷層類型、PGA、液化、建築與橋樑損壞。</li>
+              <li><strong>斷層線</strong> — 紅色虛線顯示主要斷層：主喜馬拉雅逆衝帶 (MHT)、龍門山、鮮水河。</li>
+              <li><strong>表格</strong> — 點擊任何行即可飛至地圖上該地震位置。</li>
+              <li><strong>喜馬拉雅篩選</strong> — 預設顯示西藏/四川/尼泊爾區域 14 個事件。</li>
+            </ul>
+            <h4>工程資料欄位</h4>
+            <ul>
+              <li><strong>峰值 PGA</strong> — 最大記錄地表加速度（汶川：0.96g）。</li>
+              <li><strong>液化</strong> — 土壤液化發生（基礎設計關鍵資訊）。</li>
+              <li><strong>工程備註</strong> — 每個事件的關鍵工程教訓。</li>
+            </ul>
+            <div class="manual-tip">提示：尼泊爾西部未破裂地震空區（M8+）對未來災害評估至關重要——參見 1505 年洛木斯塘事件。</div>
+          </div>
+          <div class="lang-zh-CN" style="display:none">
+            <h4>地震历史指南</h4>
+            <p>交互式 Leaflet 地图显示历史地震与土木工程资料。</p>
+            <h4>功能</h4>
+            <ul>
+              <li><strong>地图</strong> — 点击标记查看详细工程资料：土壤类型、断层类型、PGA、液化、建筑与桥梁损坏。</li>
+              <li><strong>断层线</strong> — 红色虚线显示主要断层：主喜马拉雅逆冲带 (MHT)、龙门山、鲜水河。</li>
+              <li><strong>表格</strong> — 点击任何行即可飞至地图上该地震位置。</li>
+              <li><strong>喜马拉雅筛选</strong> — 默认显示西藏/四川/尼泊尔区域 14 个事件。</li>
+            </ul>
+            <h4>工程资料字段</h4>
+            <ul>
+              <li><strong>峰值 PGA</strong> — 最大记录地表加速度（汶川：0.96g）。</li>
+              <li><strong>液化</strong> — 土壤液化发生（基础设计关键信息）。</li>
+              <li><strong>工程备注</strong> — 每个事件的关键工程教训。</li>
+            </ul>
+            <div class="manual-tip">提示：尼泊尔西部未破裂地震空区（M8+）对未来灾害评估至关重要——参见 1505 年洛木斯塘事件。</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ═══════ STRUCTURAL REPORT TAB ═══════ -->
+    <section class="card tab-panel report-panel" data-tab="report" id="report">
+      <div class="section-header">
+        <div class="pill" data-i18n="pill.report">Report</div>
+        <div>
+          <h2 data-i18n-title="report.title">Structural Report</h2>
+          <p class="subtle" data-i18n-sub="report.sub">Generate a comprehensive damage assessment report from your
+            latest simulation run.</p>
+        </div>
+        <div class="pill pill-accent" data-i18n="pill.export">Export</div>
+      </div>
+
+      <!-- Report source selector -->
+      <div class="mini-card glow-card">
+        <div class="card-header-row">
+          <div class="pill pill-ghost" data-i18n="rpt.dataSource">Data Source</div>
+        </div>
+        <div class="report-source-row">
+          <label>
+            <input type="radio" name="report-src" value="collapse" checked /> <span
+              data-i18n="rpt.collapseData">Collapse Lab (last run)</span>
+          </label>
+          <label>
+            <input type="radio" name="report-src" value="models" /> <span data-i18n="rpt.modelsData">Models Tab (last
+              simulation)</span>
+          </label>
+          <label>
+            <input type="radio" name="report-src" value="designer" /> <span data-i18n="rpt.designerData">Building
+              Designer (assessment)</span>
+          </label>
+        </div>
+        <div class="controls-actions" style="margin-top:1rem;">
+          <button type="button" id="report-gen-btn" class="sim-run-btn" data-i18n="btn.genReport">📋 Generate
+            Report</button>
+          <button type="button" id="report-print-btn" class="sim-reset-btn" data-i18n="btn.print"
+            style="display:none;">🖨️ Print /
+            PDF</button>
+        </div>
+      </div>
+
+      <!-- Report output -->
+      <div class="mini-card glow-card" id="report-output" style="display:none;">
+        <div id="report-content" class="report-content">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+      <details class="tab-manual">
+        <summary data-i18n="manual.title">User Manual</summary>
+        <div class="manual-body">
+          <div class="lang-en">
+            <h4>Structural Report Guide</h4>
+            <p>Generate damage assessment reports based on EMS-98 European Macroseismic Scale.</p>
+            <h4>Data Sources</h4>
+            <ul>
+              <li><strong>Collapse Lab</strong> — Uses final collapse state from the GLB model simulation.</li>
+              <li><strong>Models Tab</strong> — Uses SDOF analysis results from the last simulation run.</li>
+              <li><strong>Building Designer</strong> — Uses the seismic readiness assessment score.</li>
+            </ul>
+            <h4>Report Sections</h4>
+            <ul>
+              <li><strong>Damage Grade</strong> — EMS-98 Grade 1–5; Grade ≥3 triggers detailed inspection per Chinese
+                Standard GB/T 24335.</li>
+              <li><strong>Peak Drift</strong> — Inter-story drift ratio; &gt;2.5% indicates life-safety failure.</li>
+              <li><strong>Repair Cost Ratio</strong> — Approximate percentage of replacement cost needed for repairs.
+              </li>
+              <li><strong>Occupancy Safety</strong> — Red/Green tag equivalent; Grade ≥3 means evacuate.</li>
+            </ul>
+            <div class="manual-tip">Tip: Use Print/PDF to export the report for submission to earthquake damage
+              assessment teams.</div>
+          </div>
+          <div class="lang-zh-TW" style="display:none">
+            <h4>結構報告指南</h4>
+            <p>根據 EMS-98 歐洲宏觀地震烈度表生成損害評估報告。</p>
+            <h4>資料來源</h4>
+            <ul>
+              <li><strong>倒塌實驗室</strong> — 使用 GLB 模型模擬的最終倒塌狀態。</li>
+              <li><strong>模型分頁</strong> — 使用最近一次模擬的 SDOF 分析結果。</li>
+              <li><strong>建築設計器</strong> — 使用抗震準備度評估分數。</li>
+            </ul>
+            <h4>報告章節</h4>
+            <ul>
+              <li><strong>損壞等級</strong> — EMS-98 等級 1–5；等級 ≥3 依 GB/T 24335 需詳細檢查。</li>
+              <li><strong>峰值位移</strong> — 層間位移比；&gt;2.5% 表示生命安全破壞。</li>
+              <li><strong>維修費用比</strong> — 維修所需的重置成本近似百分比。</li>
+              <li><strong>使用安全性</strong> — 紅/綠標籤等效；等級 ≥3 表示需撤離。</li>
+            </ul>
+            <div class="manual-tip">提示：使用列印/PDF 匯出報告以提交給震損評估團隊。</div>
+          </div>
+          <div class="lang-zh-CN" style="display:none">
+            <h4>结构报告指南</h4>
+            <p>根据 EMS-98 欧洲宏观地震烈度表生成损害评估报告。</p>
+            <h4>数据来源</h4>
+            <ul>
+              <li><strong>倒塌实验室</strong> — 使用 GLB 模型模拟的最终倒塌状态。</li>
+              <li><strong>模型页签</strong> — 使用最近一次模拟的 SDOF 分析结果。</li>
+              <li><strong>建筑设计器</strong> — 使用抗震准备度评估分数。</li>
+            </ul>
+            <h4>报告章节</h4>
+            <ul>
+              <li><strong>损坏等级</strong> — EMS-98 等级 1–5；等级 ≥3 依 GB/T 24335 需详细检查。</li>
+              <li><strong>峰值位移</strong> — 层间位移比；&gt;2.5% 表示生命安全破坏。</li>
+              <li><strong>维修费用比</strong> — 维修所需的重置成本近似百分比。</li>
+              <li><strong>使用安全性</strong> — 红/绿标签等效；等级 ≥3 表示需撤离。</li>
+            </ul>
+            <div class="manual-tip">提示：使用打印/PDF 导出报告以提交给震损评估团队。</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ═══════ COMPARISON MODE TAB ═══════ -->
+    <section class="card tab-panel compare-panel" data-tab="compare" id="compare">
+      <div class="section-header">
+        <div class="pill" data-i18n="pill.compare">Compare</div>
+        <div>
+          <h2 data-i18n-title="compare.title">Side-by-Side Comparison</h2>
+          <p class="subtle" data-i18n-sub="compare.sub">Run two simulations simultaneously with different parameters and
+            compare results.</p>
+        </div>
+        <div class="pill pill-accent" data-i18n="pill.dualSim">Dual Sim</div>
+      </div>
+
+      <!-- Sim A + Sim B setup -->
+      <div class="compare-setup-grid">
+        <div class="mini-card glow-card compare-sim-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" style="background:rgba(59,130,246,0.2);color:#3b82f6;" data-i18n="cmp.simA">
+              Simulation A</div>
+          </div>
+          <div class="stacked-form">
+            <label><span data-i18n="cmp.model">Model</span>
+              <select id="cmp-a-model">
+                <option value="rc" data-i18n="opt.rcFrame">RC Frame</option>
+                <option value="steel" data-i18n="opt.steelFrame">Steel Frame</option>
+                <option value="timber" data-i18n="opt.timberEco">Timber Eco</option>
+                <option value="isolated" data-i18n="opt.baseIsolated">Base Isolated</option>
+                <option value="hybrid" data-i18n="opt.hybridDamper">Hybrid Damper</option>
+              </select>
+            </label>
+            <div class="two-col">
+              <label><span data-i18n="cmp.magnitude">Magnitude</span> <input type="number" id="cmp-a-mag" value="7.0"
+                  step="0.1" min="1" max="10" /></label>
+              <label><span data-i18n="cmp.stories">Stories</span> <input type="number" id="cmp-a-stories" value="8"
+                  min="1" max="40" /></label>
+            </div>
+            <div class="two-col">
+              <label><span data-i18n="cmp.pga">PGA (g)</span> <input type="number" id="cmp-a-pga" value="0.4"
+                  step="0.01" min="0.01" max="2" /></label>
+              <label><span data-i18n="cmp.damping">Damping</span> <input type="number" id="cmp-a-damp" value="0.05"
+                  step="0.01" min="0.01" max="0.3" /></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mini-card glow-card compare-sim-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" style="background:rgba(249,115,22,0.2);color:#f97316;" data-i18n="cmp.simB">
+              Simulation B</div>
+          </div>
+          <div class="stacked-form">
+            <label><span data-i18n="cmp.model">Model</span>
+              <select id="cmp-b-model">
+                <option value="rc" data-i18n="opt.rcFrame">RC Frame</option>
+                <option value="steel" data-i18n="opt.steelFrame">Steel Frame</option>
+                <option value="timber" data-i18n="opt.timberEco">Timber Eco</option>
+                <option value="isolated" selected data-i18n="opt.baseIsolated">Base Isolated</option>
+                <option value="hybrid" data-i18n="opt.hybridDamper">Hybrid Damper</option>
+              </select>
+            </label>
+            <div class="two-col">
+              <label><span data-i18n="cmp.magnitude">Magnitude</span> <input type="number" id="cmp-b-mag" value="7.0"
+                  step="0.1" min="1" max="10" /></label>
+              <label><span data-i18n="cmp.stories">Stories</span> <input type="number" id="cmp-b-stories" value="8"
+                  min="1" max="40" /></label>
+            </div>
+            <div class="two-col">
+              <label><span data-i18n="cmp.pga">PGA (g)</span> <input type="number" id="cmp-b-pga" value="0.4"
+                  step="0.01" min="0.01" max="2" /></label>
+              <label><span data-i18n="cmp.damping">Damping</span> <input type="number" id="cmp-b-damp" value="0.15"
+                  step="0.01" min="0.01" max="0.3" /></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-actions" style="justify-content:center;margin:1rem 0;">
+        <button type="button" id="cmp-run-btn" class="sim-run-btn" data-i18n="btn.runBoth">▶ Run Both</button>
+        <button type="button" id="cmp-reset-btn" class="sim-reset-btn" data-i18n="btn.reset">↺ Reset</button>
+      </div>
+
+      <!-- Side-by-side canvases -->
+      <div class="compare-canvas-grid">
+        <div class="mini-card glow-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" style="background:rgba(59,130,246,0.2);color:#3b82f6;">Sim A</div>
+            <span class="eyebrow" id="cmp-a-status">Ready</span>
+          </div>
+          <canvas id="cmp-canvas-a" width="880" height="700"></canvas>
+          <div class="cmp-result-bar" id="cmp-a-result">
+            <span><span data-i18n="cmp.damage">Damage:</span> <strong id="cmp-a-dmg">—</strong></span>
+            <span><span data-i18n="cmp.peakDrift">Peak Drift:</span> <strong id="cmp-a-drift">—</strong></span>
+            <span><span data-i18n="cmp.maxAccel">Max Accel:</span> <strong id="cmp-a-accel">—</strong></span>
+          </div>
+        </div>
+        <div class="mini-card glow-card">
+          <div class="card-header-row">
+            <div class="pill pill-ghost" style="background:rgba(249,115,22,0.2);color:#f97316;">Sim B</div>
+            <span class="eyebrow" id="cmp-b-status">Ready</span>
+          </div>
+          <canvas id="cmp-canvas-b" width="880" height="700"></canvas>
+          <div class="cmp-result-bar" id="cmp-b-result">
+            <span><span data-i18n="cmp.damage">Damage:</span> <strong id="cmp-b-dmg">—</strong></span>
+            <span><span data-i18n="cmp.peakDrift">Peak Drift:</span> <strong id="cmp-b-drift">—</strong></span>
+            <span><span data-i18n="cmp.maxAccel">Max Accel:</span> <strong id="cmp-b-accel">—</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparison summary -->
+      <div class="mini-card glow-card" id="cmp-summary" style="display:none;">
+        <div class="card-header-row">
+          <div class="pill pill-ghost" data-i18n="cmp.summary">Comparison Summary</div>
+        </div>
+        <div class="cmp-summary-grid" id="cmp-summary-grid"></div>
+        <div class="cmp-verdict" id="cmp-verdict"></div>
+      </div>
+      <details class="tab-manual">
+        <summary data-i18n="manual.title">User Manual</summary>
+        <div class="manual-body">
+          <div class="lang-en">
+            <h4>Comparison Mode Guide</h4>
+            <p>Run two structural simulations side-by-side with different parameters to compare performance.</p>
+            <h4>How to Use</h4>
+            <ol>
+              <li>Configure <strong>Sim A</strong> and <strong>Sim B</strong> with different models/parameters.</li>
+              <li>Click <strong>Run Both</strong> to start simultaneous SDOF simulations.</li>
+              <li>Watch the animated building response in real-time.</li>
+              <li>Review the <strong>Comparison Summary</strong> table to see which system performed better.</li>
+            </ol>
+            <h4>Civil Engineering Applications</h4>
+            <ul>
+              <li>Compare <strong>RC Frame vs Base Isolated</strong> for a hospital in Kathmandu (high-seismicity).</li>
+              <li>Compare <strong>Steel vs Hybrid Damper</strong> for tall buildings along the Sichuan-Tibet corridor.
+              </li>
+              <li>Test the same model at different <strong>PGA levels</strong> to find the damage threshold.</li>
+            </ul>
+            <div class="manual-tip">Tip: Base Isolated systems show dramatically lower drift at high PGA — try comparing
+              at PGA=0.8g for Wenchuan-level shaking.</div>
+          </div>
+          <div class="lang-zh-TW" style="display:none">
+            <h4>比較模式指南</h4>
+            <p>使用不同參數並排運行兩個結構模擬以比較性能。</p>
+            <h4>使用方法</h4>
+            <ol>
+              <li>為<strong>模擬 A</strong> 和<strong>模擬 B</strong> 配置不同的模型/參數。</li>
+              <li>點擊<strong>同時執行</strong>啟動雙 SDOF 模擬。</li>
+              <li>即時觀看建築動態響應。</li>
+              <li>查看<strong>比較摘要</strong>表格了解哪個系統表現更好。</li>
+            </ol>
+            <h4>土木工程應用</h4>
+            <ul>
+              <li>比較<strong>RC 構架 vs 隔震結構</strong>用於加德滿都醫院（高震區）。</li>
+              <li>比較<strong>鋼構 vs 混合阻尼器</strong>用於川藏走廊高層建築。</li>
+              <li>在不同 <strong>PGA 水平</strong>測試同一模型以找出損壞門檻。</li>
+            </ul>
+            <div class="manual-tip">提示：隔震系統在高 PGA 下位移顯著降低——嘗試在 PGA=0.8g（汶川級搖晃）下比較。</div>
+          </div>
+          <div class="lang-zh-CN" style="display:none">
+            <h4>比较模式指南</h4>
+            <p>使用不同参数并排运行两个结构模拟以比较性能。</p>
+            <h4>使用方法</h4>
+            <ol>
+              <li>为<strong>模拟 A</strong> 和<strong>模拟 B</strong> 配置不同的模型/参数。</li>
+              <li>点击<strong>同时执行</strong>启动双 SDOF 模拟。</li>
+              <li>实时观看建筑动态响应。</li>
+              <li>查看<strong>比较摘要</strong>表格了解哪个系统表现更好。</li>
+            </ol>
+            <h4>土木工程应用</h4>
+            <ul>
+              <li>比较<strong>RC 框架 vs 隔震结构</strong>用于加德满都医院（高震区）。</li>
+              <li>比较<strong>钢结构 vs 混合阻尼器</strong>用于川藏走廊高层建筑。</li>
+              <li>在不同 <strong>PGA 水平</strong>测试同一模型以找出损坏阈值。</li>
+            </ul>
+            <div class="manual-tip">提示：隔震系统在高 PGA 下位移显著降低——尝试在 PGA=0.8g（汶川级摇晃）下比较。</div>
+          </div>
+        </div>
+      </details>
     </section>
   </main>
 
   <script src="lib/three.min.js"></script>
   <script src="lib/OrbitControls.js"></script>
+  <script src="lib/DRACOLoader.js"></script>
   <script src="lib/GLTFLoader.js"></script>
   <script src="models.js"></script>
+  <script src="collapse.js"></script>
+  <script src="waves.js"></script>
+  <script src="designer.js"></script>
+  <script src="history.js"></script>
+  <script src="report.js"></script>
+  <script src="compare.js"></script>
+  <script src="i18n.js"></script>
   <script src="main.js"></script>
 </body>
 

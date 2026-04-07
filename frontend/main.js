@@ -19,8 +19,8 @@ const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
 const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
 const navLinks = Array.from(document.querySelectorAll(".nav-link"));
 const tabTriggers = Array.from(document.querySelectorAll("[data-tab-target]"));
-const mobileMenuToggle = document.querySelector(".mobile-menu-toggle");
-const mobileMenuBackdrop = document.querySelector(".mobile-menu-backdrop");
+const mobileMenuToggle = document.querySelector(".sidebar-toggle");
+const mobileMenuBackdrop = document.querySelector(".sidebar-backdrop");
 
 // Minimal SimplexNoise (2D/3D) for background distortion (from Jonas Wagner, public domain)
 class SimplexNoise {
@@ -416,19 +416,19 @@ terrainForm?.addEventListener("submit", async (e) => {
 function collectPayload() {
   return {
     building: {
-      name: document.getElementById("b-name").value,
-      stories: parseInt(document.getElementById("b-stories").value, 10),
-      bay_width_m: parseFloat(document.getElementById("b-bayw").value),
-      bay_depth_m: parseFloat(document.getElementById("b-bayd").value),
-      story_height_m: parseFloat(document.getElementById("b-storyh").value),
-      material: document.getElementById("b-material").value,
-      importance_factor: parseFloat(document.getElementById("b-importance").value),
+      name: document.getElementById("b-name")?.value ?? "",
+      stories: parseInt(document.getElementById("b-stories")?.value, 10) || 5,
+      bay_width_m: parseFloat(document.getElementById("b-bayw")?.value) || 6,
+      bay_depth_m: parseFloat(document.getElementById("b-bayd")?.value) || 6,
+      story_height_m: parseFloat(document.getElementById("b-storyh")?.value) || 3.2,
+      material: document.getElementById("b-material")?.value ?? "RC",
+      importance_factor: parseFloat(document.getElementById("b-importance")?.value) || 1.0,
     },
     site: {
-      site_class: document.getElementById("s-siteclass").value,
-      slope_degrees: parseFloat(document.getElementById("s-slope").value),
-      pga_g: parseFloat(document.getElementById("s-pga").value),
-      seismic_zone: document.getElementById("s-zone").value || null,
+      site_class: document.getElementById("s-siteclass")?.value ?? "D",
+      slope_degrees: parseFloat(document.getElementById("s-slope")?.value) || 8,
+      pga_g: parseFloat(document.getElementById("s-pga")?.value) || 0.25,
+      seismic_zone: document.getElementById("s-zone")?.value || null,
     },
   };
 }
@@ -879,6 +879,7 @@ function makeRoughBall(mesh, bassFr, treFr, noise) {
 
 function wireTabs() {
   if (!tabPanels.length) return;
+  const noiseBg = document.getElementById("noise-bg-frame");
   const activate = (name) => {
     tabButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === name));
     tabPanels.forEach((panel) => panel.classList.toggle("active", panel.dataset.tab === name));
@@ -886,6 +887,14 @@ function wireTabs() {
       const target = link.getAttribute("data-tab-target");
       link.classList.toggle("active", target === name);
     });
+    // Also update dropdown link active states
+    document.querySelectorAll(".nav-dropdown .nav-link").forEach((link) => {
+      link.classList.toggle("active", link.getAttribute("data-tab-target") === name);
+    });
+    // Toggle noise background — only show for home tab
+    if (noiseBg) {
+      noiseBg.style.display = name === "home" ? "" : "none";
+    }
 
     if (name === "terrain") {
       if (typeof initThree === "function") initThree();
@@ -898,7 +907,32 @@ function wireTabs() {
         setTimeout(() => window.initModelsTab(), 80);
       }
     }
+
+    if (name === "collapse") {
+      if (typeof window.initCollapseTab === "function") {
+        setTimeout(function () { requestAnimationFrame(function () { window.initCollapseTab(); }); }, 120);
+      }
+    }
+
+    if (name === "waves") {
+      if (typeof window.initWavesTab === "function") setTimeout(function () { window.initWavesTab(); }, 80);
+    }
+    if (name === "designer") {
+      if (typeof window.initDesignerTab === "function") setTimeout(function () { window.initDesignerTab(); }, 80);
+    }
+    if (name === "history") {
+      if (typeof window.initHistoryTab === "function") setTimeout(function () { window.initHistoryTab(); }, 80);
+    }
+    if (name === "report") {
+      if (typeof window.initReportTab === "function") setTimeout(function () { window.initReportTab(); }, 80);
+    }
+    if (name === "compare") {
+      if (typeof window.initCompareTab === "function") setTimeout(function () { window.initCompareTab(); }, 80);
+    }
   };
+
+  // Expose for i18n dropdown and other external callers
+  window.activateTab = activate;
 
   tabTriggers.forEach((link) =>
     link.addEventListener("click", (e) => {
@@ -917,13 +951,13 @@ function wireTabs() {
 function wireMobileMenu() {
   if (!mobileMenuToggle) return;
   const setOpen = (open) => {
-    document.body.classList.toggle("mobile-menu-open", open);
+    document.body.classList.toggle("sidebar-open", open);
     mobileMenuToggle.setAttribute("aria-expanded", open ? "true" : "false");
-    mobileMenuToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    mobileMenuToggle.setAttribute("aria-label", open ? "Close sidebar" : "Open sidebar");
   };
 
   mobileMenuToggle.addEventListener("click", () => {
-    const isOpen = document.body.classList.contains("mobile-menu-open");
+    const isOpen = document.body.classList.contains("sidebar-open");
     setOpen(!isOpen);
   });
 
@@ -931,16 +965,73 @@ function wireMobileMenu() {
 
   navLinks.forEach((link) =>
     link.addEventListener("click", () => {
-      if (window.matchMedia("(max-width: 768px)").matches) {
+      if (window.matchMedia("(max-width: 900px)").matches) {
         setOpen(false);
       }
     })
   );
 
   window.addEventListener("resize", () => {
-    if (!window.matchMedia("(max-width: 768px)").matches) {
+    if (!window.matchMedia("(max-width: 900px)").matches) {
       setOpen(false);
     }
+  });
+}
+
+/* ── Sidebar collapse (desktop) ── */
+function wireSidebarCollapse() {
+  const collapseBtn = document.getElementById("sidebar-collapse-btn");
+  if (!collapseBtn) return;
+
+  // Restore saved preference
+  if (localStorage.getItem("sidebar-collapsed") === "true") {
+    document.body.classList.add("sidebar-collapsed");
+  }
+
+  collapseBtn.addEventListener("click", () => {
+    const collapsed = document.body.classList.toggle("sidebar-collapsed");
+    localStorage.setItem("sidebar-collapsed", collapsed);
+  });
+}
+
+/* ── Help panel — shows manual for active tab ── */
+function wireHelpPanel() {
+  const helpBtn = document.getElementById("help-btn");
+  const helpPanel = document.getElementById("help-panel");
+  const helpClose = document.getElementById("help-close");
+  const helpOverlay = document.getElementById("help-overlay");
+  const helpBody = document.getElementById("help-panel-body");
+  if (!helpBtn || !helpPanel) return;
+
+  function openHelp() {
+    // Find the active tab's manual
+    const activePanel = document.querySelector(".tab-panel.active");
+    const manual = activePanel?.querySelector(".tab-manual .manual-body");
+    if (manual) {
+      // Clone visible language content
+      helpBody.innerHTML = manual.innerHTML;
+      // Re-apply language visibility in cloned content
+      const lang = (window.getAppLang && window.getAppLang()) || "en";
+      helpBody.querySelectorAll(".lang-en, .lang-zh-TW, .lang-zh-CN").forEach(el => {
+        el.style.display = el.classList.contains("lang-" + lang) ? "" : "none";
+      });
+    } else {
+      helpBody.innerHTML = '<div class="help-panel-empty">No manual available for this tab.</div>';
+    }
+    helpPanel.classList.add("open");
+    helpOverlay?.classList.add("open");
+  }
+
+  function closeHelp() {
+    helpPanel.classList.remove("open");
+    helpOverlay?.classList.remove("open");
+  }
+
+  helpBtn.addEventListener("click", openHelp);
+  helpClose?.addEventListener("click", closeHelp);
+  helpOverlay?.addEventListener("click", closeHelp);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && helpPanel.classList.contains("open")) closeHelp();
   });
 }
 
@@ -976,4 +1067,6 @@ window.addEventListener("load", () => {
   wireInstructionsToggle();
   wireTabs();
   wireMobileMenu();
+  wireSidebarCollapse();
+  wireHelpPanel();
 });
