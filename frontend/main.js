@@ -1,4 +1,9 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE =
+  window.SEISMOSAFE_API_BASE ||
+  document.querySelector('meta[name="api-base"]')?.content ||
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:8000"
+    : `${window.location.origin}/api`);
 
 const terrainForm = document.getElementById("terrain-form");
 const terrainResult = document.getElementById("terrain-result");
@@ -14,6 +19,8 @@ const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
 const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
 const navLinks = Array.from(document.querySelectorAll(".nav-link"));
 const tabTriggers = Array.from(document.querySelectorAll("[data-tab-target]"));
+const mobileMenuToggle = document.querySelector(".sidebar-toggle");
+const mobileMenuBackdrop = document.querySelector(".sidebar-backdrop");
 
 // Minimal SimplexNoise (2D/3D) for background distortion (from Jonas Wagner, public domain)
 class SimplexNoise {
@@ -150,18 +157,6 @@ let previewAnimationId;
 let previewResize;
 let baseModel, baseModelBBox;
 
-// Simulation globals
-let simScene, simCamera, simRenderer, simControls;
-let simBuildingModel, simGroundMesh;
-let simAnimationId;
-let earthquakeMagnitude = 0;
-let isCollapsed = false;
-let buildingFragments = [];
-let originalPositions = [];
-let originalRotations = [];
-let earthquakeActive = false;
-let autoEarthquakeInterval = null;
-
 // Keep relative so loaders don't prepend origin twice
 const MODEL_PATH = "Kumbum.gltf"; // GLTF model in the frontend/ folder
 
@@ -286,7 +281,7 @@ terrainForm?.addEventListener("submit", async (e) => {
     try {
       // Read file as ArrayBuffer
       const buffer = await file.arrayBuffer();
-      
+
       // Derive slope from GeoTIFF elevation data
       const slope = await deriveSlope(buffer);
       updateSlopeDisplay(slope);
@@ -299,27 +294,27 @@ terrainForm?.addEventListener("submit", async (e) => {
   // Simple GeoTIFF slope calculation
   async function deriveSlope(buffer) {
     const view = new DataView(buffer);
-    
+
     // Check TIFF magic bytes (little-endian: 0x4949, big-endian: 0x4D4D)
     const byteOrder = view.getUint16(0, true);
     const isLittleEndian = byteOrder === 0x4949;
     const magic = view.getUint16(2, isLittleEndian);
-    
+
     if (magic !== 42 && magic !== 43) {
       throw new Error("Invalid TIFF format");
     }
 
     // For a real GeoTIFF, we'd parse IFD entries to get image data
     // This is a simplified approach: sample the file to estimate terrain slope
-    
+
     // Get file size
     const fileSize = buffer.byteLength;
-    
+
     // Sample elevation values from the buffer (simplified approach)
     // Real implementation would parse TIFF structure and read actual elevation raster
     const samples = [];
     const sampleCount = Math.min(100, Math.floor(fileSize / 100));
-    
+
     for (let i = 0; i < sampleCount; i++) {
       const offset = Math.floor((i / sampleCount) * (fileSize - 4));
       try {
@@ -348,7 +343,7 @@ terrainForm?.addEventListener("submit", async (e) => {
     // Map standard deviation to slope angle (heuristic)
     // Higher variation = steeper terrain
     let slope = Math.min(stdDev * 0.5, 40);
-    
+
     // Ensure reasonable minimum
     if (slope < 2) slope = 2 + Math.random() * 6;
 
@@ -421,19 +416,19 @@ terrainForm?.addEventListener("submit", async (e) => {
 function collectPayload() {
   return {
     building: {
-      name: document.getElementById("b-name").value,
-      stories: parseInt(document.getElementById("b-stories").value, 10),
-      bay_width_m: parseFloat(document.getElementById("b-bayw").value),
-      bay_depth_m: parseFloat(document.getElementById("b-bayd").value),
-      story_height_m: parseFloat(document.getElementById("b-storyh").value),
-      material: document.getElementById("b-material").value,
-      importance_factor: parseFloat(document.getElementById("b-importance").value),
+      name: document.getElementById("b-name")?.value ?? "",
+      stories: parseInt(document.getElementById("b-stories")?.value, 10) || 5,
+      bay_width_m: parseFloat(document.getElementById("b-bayw")?.value) || 6,
+      bay_depth_m: parseFloat(document.getElementById("b-bayd")?.value) || 6,
+      story_height_m: parseFloat(document.getElementById("b-storyh")?.value) || 3.2,
+      material: document.getElementById("b-material")?.value ?? "RC",
+      importance_factor: parseFloat(document.getElementById("b-importance")?.value) || 1.0,
     },
     site: {
-      site_class: document.getElementById("s-siteclass").value,
-      slope_degrees: parseFloat(document.getElementById("s-slope").value),
-      pga_g: parseFloat(document.getElementById("s-pga").value),
-      seismic_zone: document.getElementById("s-zone").value || null,
+      site_class: document.getElementById("s-siteclass")?.value ?? "D",
+      slope_degrees: parseFloat(document.getElementById("s-slope")?.value) || 8,
+      pga_g: parseFloat(document.getElementById("s-pga")?.value) || 0.25,
+      seismic_zone: document.getElementById("s-zone")?.value || null,
     },
   };
 }
@@ -567,7 +562,7 @@ function updatePreview(payload) {
       fallbackBox();
       return;
     }
-    
+
     // Scale model 50x larger
     const uniformScale = 50;
     clone.scale.setScalar(uniformScale);
@@ -597,25 +592,25 @@ function updatePreview(payload) {
   } else if (THREE.GLTFLoader) {
     console.log("[GLTF] THREE.GLTFLoader available, starting load...");
     setStatus("Loading model...");
-    
+
     const loader = new THREE.GLTFLoader();
     loader.load(
       MODEL_PATH,
       (gltf) => {
         console.log("[GLTF] Load success, scene:", gltf.scene);
         const model = gltf.scene;
-        
+
         // Normalize to ground at y=0 and center at origin
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         model.position.sub(center);
         const boxed = new THREE.Box3().setFromObject(model);
         model.position.y -= boxed.min.y;
-        
+
         baseModel = model;
         baseModelBBox = new THREE.Box3().setFromObject(baseModel);
         console.log("[GLTF] baseModelBBox size:", baseModelBBox.getSize(new THREE.Vector3()));
-        
+
         // Ensure meshes have materials
         baseModel.traverse((child) => {
           if (child.isMesh) {
@@ -626,7 +621,7 @@ function updatePreview(payload) {
             }
           }
         });
-        
+
         console.info("[GLTF] Model loaded", { bbox: baseModelBBox.getSize(new THREE.Vector3()) });
         placeModel();
         setStatus(`Preview: ${width}m × ${depth}m × ${height.toFixed(2)}m, slope ${slopeDeg}°`);
@@ -884,6 +879,7 @@ function makeRoughBall(mesh, bassFr, treFr, noise) {
 
 function wireTabs() {
   if (!tabPanels.length) return;
+  const noiseBg = document.getElementById("noise-bg-frame");
   const activate = (name) => {
     tabButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === name));
     tabPanels.forEach((panel) => panel.classList.toggle("active", panel.dataset.tab === name));
@@ -891,19 +887,52 @@ function wireTabs() {
       const target = link.getAttribute("data-tab-target");
       link.classList.toggle("active", target === name);
     });
+    // Also update dropdown link active states
+    document.querySelectorAll(".nav-dropdown .nav-link").forEach((link) => {
+      link.classList.toggle("active", link.getAttribute("data-tab-target") === name);
+    });
+    // Toggle noise background — only show for home tab
+    if (noiseBg) {
+      noiseBg.style.display = name === "home" ? "" : "none";
+    }
 
     if (name === "terrain") {
       if (typeof initThree === "function") initThree();
       if (typeof collectPayload === "function") updatePreview(collectPayload());
     }
 
-    if (name === "simulation") {
-      if (!simScene && typeof initSimulation === "function") {
-        initSimulation();
-        wireSimulationControls();
+    if (name === "models") {
+      if (typeof window.initModelsTab === "function") {
+        // Small delay so the panel is visible and canvas can measure
+        setTimeout(() => window.initModelsTab(), 80);
       }
     }
+
+    if (name === "collapse") {
+      if (typeof window.initCollapseTab === "function") {
+        setTimeout(function () { requestAnimationFrame(function () { window.initCollapseTab(); }); }, 120);
+      }
+    }
+
+    if (name === "waves") {
+      if (typeof window.initWavesTab === "function") setTimeout(function () { window.initWavesTab(); }, 80);
+    }
+    if (name === "designer") {
+      if (typeof window.initDesignerTab === "function") setTimeout(function () { window.initDesignerTab(); }, 80);
+    }
+    if (name === "history") {
+      if (typeof window.initHistoryTab === "function") setTimeout(function () { window.initHistoryTab(); }, 80);
+    }
+    if (name === "report") {
+      if (typeof window.initReportTab === "function") setTimeout(function () { window.initReportTab(); }, 80);
+    }
+    if (name === "compare") {
+      if (typeof window.initCompareTab === "function") setTimeout(function () { window.initCompareTab(); }, 80);
+    }
   };
+
+  // Expose for i18n dropdown and other external callers
+  window.activateTab = activate;
 
   tabTriggers.forEach((link) =>
     link.addEventListener("click", (e) => {
@@ -917,6 +946,93 @@ function wireTabs() {
   );
 
   activate("home");
+}
+
+function wireMobileMenu() {
+  if (!mobileMenuToggle) return;
+  const setOpen = (open) => {
+    document.body.classList.toggle("sidebar-open", open);
+    mobileMenuToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    mobileMenuToggle.setAttribute("aria-label", open ? "Close sidebar" : "Open sidebar");
+  };
+
+  mobileMenuToggle.addEventListener("click", () => {
+    const isOpen = document.body.classList.contains("sidebar-open");
+    setOpen(!isOpen);
+  });
+
+  mobileMenuBackdrop?.addEventListener("click", () => setOpen(false));
+
+  navLinks.forEach((link) =>
+    link.addEventListener("click", () => {
+      if (window.matchMedia("(max-width: 900px)").matches) {
+        setOpen(false);
+      }
+    })
+  );
+
+  window.addEventListener("resize", () => {
+    if (!window.matchMedia("(max-width: 900px)").matches) {
+      setOpen(false);
+    }
+  });
+}
+
+/* ── Sidebar collapse (desktop) ── */
+function wireSidebarCollapse() {
+  const collapseBtn = document.getElementById("sidebar-collapse-btn");
+  if (!collapseBtn) return;
+
+  // Restore saved preference
+  if (localStorage.getItem("sidebar-collapsed") === "true") {
+    document.body.classList.add("sidebar-collapsed");
+  }
+
+  collapseBtn.addEventListener("click", () => {
+    const collapsed = document.body.classList.toggle("sidebar-collapsed");
+    localStorage.setItem("sidebar-collapsed", collapsed);
+  });
+}
+
+/* ── Help panel — shows manual for active tab ── */
+function wireHelpPanel() {
+  const helpBtn = document.getElementById("help-btn");
+  const helpPanel = document.getElementById("help-panel");
+  const helpClose = document.getElementById("help-close");
+  const helpOverlay = document.getElementById("help-overlay");
+  const helpBody = document.getElementById("help-panel-body");
+  if (!helpBtn || !helpPanel) return;
+
+  function openHelp() {
+    // Find the active tab's manual
+    const activePanel = document.querySelector(".tab-panel.active");
+    const manual = activePanel?.querySelector(".tab-manual .manual-body");
+    if (manual) {
+      // Clone visible language content
+      helpBody.innerHTML = manual.innerHTML;
+      // Re-apply language visibility in cloned content
+      const lang = (window.getAppLang && window.getAppLang()) || "en";
+      helpBody.querySelectorAll(".lang-en, .lang-zh-TW, .lang-zh-CN").forEach(el => {
+        el.style.display = el.classList.contains("lang-" + lang) ? "" : "none";
+      });
+    } else {
+      helpBody.innerHTML = '<div class="help-panel-empty">No manual available for this tab.</div>';
+    }
+    helpPanel.classList.add("open");
+    helpOverlay?.classList.add("open");
+  }
+
+  function closeHelp() {
+    helpPanel.classList.remove("open");
+    helpOverlay?.classList.remove("open");
+  }
+
+  helpBtn.addEventListener("click", openHelp);
+  helpClose?.addEventListener("click", closeHelp);
+  helpOverlay?.addEventListener("click", closeHelp);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && helpPanel.classList.contains("open")) closeHelp();
+  });
 }
 
 function wireInstructionsToggle() {
@@ -940,504 +1056,6 @@ function setStatus(text) {
   if (previewStatus) previewStatus.textContent = text;
 }
 
-// ========================================
-// EARTHQUAKE SIMULATION
-// ========================================
-
-function initSimulation() {
-  const simCanvas = document.getElementById("simulation-canvas");
-  const simStatus = document.getElementById("simulation-status");
-
-  if (!simCanvas || !window.THREE) return;
-
-  const width = Math.max(simCanvas.clientWidth, 400);
-  const height = Math.max(simCanvas.clientHeight, 300);
-
-  // Create scene
-  simScene = new THREE.Scene();
-  simScene.background = new THREE.Color(0x1a1a2e);
-  simScene.fog = new THREE.Fog(0x1a1a2e, 50, 200);
-
-  // Create camera
-  simCamera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-  simCamera.position.set(30, 20, 40);
-
-  // Create renderer
-  simRenderer = new THREE.WebGLRenderer({ antialias: true });
-  simRenderer.setPixelRatio(window.devicePixelRatio);
-  simRenderer.setSize(width, height);
-  simRenderer.shadowMap.enabled = true;
-  simRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  simCanvas.appendChild(simRenderer.domElement);
-
-  // Orbit controls
-  simControls = new THREE.OrbitControls(simCamera, simRenderer.domElement);
-  simControls.target.set(0, 8, 0);
-  simControls.enableDamping = true;
-  simControls.dampingFactor = 0.05;
-  simControls.update();
-
-  // Lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-  simScene.add(ambientLight);
-
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  dirLight.position.set(20, 40, 20);
-  dirLight.castShadow = true;
-  dirLight.shadow.camera.left = -30;
-  dirLight.shadow.camera.right = 30;
-  dirLight.shadow.camera.top = 30;
-  dirLight.shadow.camera.bottom = -30;
-  dirLight.shadow.mapSize.width = 2048;
-  dirLight.shadow.mapSize.height = 2048;
-  simScene.add(dirLight);
-
-  // Ground plane
-  const groundGeo = new THREE.PlaneGeometry(100, 100);
-  const groundMat = new THREE.MeshStandardMaterial({
-    color: 0x2d3436,
-    roughness: 0.8,
-    metalness: 0.2
-  });
-  simGroundMesh = new THREE.Mesh(groundGeo, groundMat);
-  simGroundMesh.rotation.x = -Math.PI / 2;
-  simGroundMesh.receiveShadow = true;
-  simScene.add(simGroundMesh);
-
-  // Grid helper
-  const gridHelper = new THREE.GridHelper(100, 50, 0x636e72, 0x2d3436);
-  simScene.add(gridHelper);
-
-  // Load building model
-  loadSimulationModel(simStatus);
-
-  // Handle window resize
-  window.addEventListener("resize", () => {
-    const w = Math.max(simCanvas.clientWidth, 400);
-    const h = Math.max(simCanvas.clientHeight, 300);
-    simCamera.aspect = w / h;
-    simCamera.updateProjectionMatrix();
-    simRenderer.setSize(w, h);
-  });
-
-  // Start render loop
-  startSimulationRender();
-}
-
-function loadSimulationModel(statusEl) {
-  if (!THREE.GLTFLoader) {
-    statusEl.textContent = "GLTFLoader not available";
-    createFallbackBuilding();
-    return;
-  }
-
-  statusEl.textContent = "Loading building model...";
-
-  const loader = new THREE.GLTFLoader();
-
-  // Try to load building.glb first, fallback to Kumbum.gltf
-  loader.load(
-    "building.glb",
-    (gltf) => {
-      setupBuildingModel(gltf.scene, statusEl);
-    },
-    (progress) => {
-      if (progress.total) {
-        const pct = Math.round((progress.loaded / progress.total) * 100);
-        statusEl.textContent = `Loading model... ${pct}%`;
-      }
-    },
-    (error) => {
-      console.warn("building.glb not found, trying Kumbum.gltf:", error);
-      // Fallback to Kumbum.gltf
-      loader.load(
-        "Kumbum.gltf",
-        (gltf) => {
-          setupBuildingModel(gltf.scene, statusEl);
-        },
-        undefined,
-        (err) => {
-          console.error("Failed to load any model:", err);
-          statusEl.textContent = "Failed to load model, using placeholder";
-          createFallbackBuilding();
-        }
-      );
-    }
-  );
-}
-
-function setupBuildingModel(model, statusEl) {
-  // Normalize model
-  const box = new THREE.Box3().setFromObject(model);
-  const center = box.getCenter(new THREE.Vector3());
-  const size = box.getSize(new THREE.Vector3());
-
-  // Center at origin
-  model.position.sub(center);
-
-  // Move to ground
-  const reboxed = new THREE.Box3().setFromObject(model);
-  model.position.y -= reboxed.min.y;
-
-  // Scale to reasonable size (about 15 units tall)
-  const targetHeight = 15;
-  const currentHeight = size.y;
-  const scale = targetHeight / currentHeight;
-  model.scale.multiplyScalar(scale);
-
-  // Setup materials and shadows
-  model.traverse((child) => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-
-      if (!child.material) {
-        child.material = new THREE.MeshStandardMaterial({
-          color: 0xcccccc,
-          roughness: 0.7,
-          metalness: 0.3
-        });
-      } else {
-        // Ensure material is proper type
-        if (child.material.isMaterial) {
-          child.material.needsUpdate = true;
-        }
-      }
-    }
-  });
-
-  simBuildingModel = model;
-  simScene.add(simBuildingModel);
-
-  // Store original state for reset
-  storeOriginalState();
-
-  statusEl.textContent = "Model loaded. Adjust magnitude to simulate earthquake.";
-
-  // Fit camera to model
-  fitCameraToModel(simBuildingModel);
-}
-
-function createFallbackBuilding() {
-  // Create a simple multi-story building as fallback
-  const buildingGroup = new THREE.Group();
-
-  const storyHeight = 3;
-  const stories = 5;
-  const width = 8;
-  const depth = 8;
-
-  for (let i = 0; i < stories; i++) {
-    const geometry = new THREE.BoxGeometry(width, storyHeight, depth);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x95a5a6,
-      roughness: 0.7,
-      metalness: 0.3
-    });
-    const floor = new THREE.Mesh(geometry, material);
-    floor.position.y = storyHeight * i + storyHeight / 2;
-    floor.castShadow = true;
-    floor.receiveShadow = true;
-    buildingGroup.add(floor);
-  }
-
-  simBuildingModel = buildingGroup;
-  simScene.add(simBuildingModel);
-  storeOriginalState();
-
-  const statusEl = document.getElementById("simulation-status");
-  if (statusEl) {
-    statusEl.textContent = "Placeholder building loaded. Adjust magnitude to simulate.";
-  }
-}
-
-function storeOriginalState() {
-  if (!simBuildingModel) return;
-
-  originalPositions = [];
-  originalRotations = [];
-  buildingFragments = [];
-
-  simBuildingModel.traverse((child) => {
-    if (child.isMesh) {
-      buildingFragments.push(child);
-      originalPositions.push(child.position.clone());
-      originalRotations.push(child.rotation.clone());
-
-      // Add physics properties
-      child.userData.velocity = new THREE.Vector3(0, 0, 0);
-      child.userData.angularVelocity = new THREE.Vector3(0, 0, 0);
-      child.userData.isFalling = false;
-    }
-  });
-}
-
-function fitCameraToModel(object) {
-  if (!simCamera || !simControls || !object) return;
-
-  const box = new THREE.Box3().setFromObject(object);
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const fov = simCamera.fov * (Math.PI / 180);
-  let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-  cameraZ *= 2.5; // Zoom out a bit
-
-  const direction = new THREE.Vector3(1, 0.6, 1).normalize();
-  const newPos = center.clone().add(direction.multiplyScalar(cameraZ));
-
-  simCamera.position.copy(newPos);
-  simCamera.lookAt(center);
-
-  simControls.target.copy(center);
-  simControls.update();
-}
-
-function resetSimulation() {
-  if (!simBuildingModel) return;
-
-  isCollapsed = false;
-  earthquakeMagnitude = 0;
-  earthquakeActive = false;
-
-  // Reset magnitude slider
-  const magnitudeSlider = document.getElementById("eq-magnitude");
-  if (magnitudeSlider) magnitudeSlider.value = 0;
-  updateMagnitudeDisplay(0);
-
-  // Reset all fragments to original state
-  buildingFragments.forEach((fragment, i) => {
-    if (originalPositions[i] && originalRotations[i]) {
-      fragment.position.copy(originalPositions[i]);
-      fragment.rotation.copy(originalRotations[i]);
-      fragment.userData.velocity = new THREE.Vector3(0, 0, 0);
-      fragment.userData.angularVelocity = new THREE.Vector3(0, 0, 0);
-      fragment.userData.isFalling = false;
-    }
-  });
-
-  // Reset ground position
-  if (simGroundMesh) {
-    simGroundMesh.position.y = 0;
-  }
-
-  const statusEl = document.getElementById("simulation-status");
-  if (statusEl) {
-    statusEl.textContent = "Building reset. Ready for simulation.";
-  }
-}
-
-function updateMagnitudeDisplay(magnitude) {
-  const magnitudeValue = document.getElementById("magnitude-value");
-  const magnitudeStatus = document.getElementById("magnitude-status");
-
-  if (magnitudeValue) {
-    magnitudeValue.textContent = magnitude.toFixed(1);
-  }
-
-  if (magnitudeStatus) {
-    magnitudeStatus.className = "magnitude-status";
-
-    if (magnitude < 5.0) {
-      magnitudeStatus.textContent = "Safe";
-      magnitudeStatus.classList.add("safe");
-    } else if (magnitude < 7.0) {
-      magnitudeStatus.textContent = "Moderate";
-      magnitudeStatus.classList.add("moderate");
-    } else if (magnitude < 8.5) {
-      magnitudeStatus.textContent = "Severe";
-      magnitudeStatus.classList.add("severe");
-    } else {
-      magnitudeStatus.textContent = "CATASTROPHIC";
-      magnitudeStatus.classList.add("catastrophic");
-    }
-  }
-}
-
-function triggerCollapse() {
-  if (isCollapsed || !simBuildingModel) return;
-
-  isCollapsed = true;
-
-  const statusEl = document.getElementById("simulation-status");
-  if (statusEl) {
-    statusEl.textContent = "BUILDING COLLAPSE! Magnitude 8.5+ exceeded.";
-  }
-
-  // Apply random velocities to fragments to simulate explosion/collapse
-  buildingFragments.forEach((fragment) => {
-    fragment.userData.isFalling = true;
-
-    // Random outward velocity
-    const randomDir = new THREE.Vector3(
-      (Math.random() - 0.5) * 2,
-      Math.random() * 0.5 + 0.2,
-      (Math.random() - 0.5) * 2
-    );
-
-    fragment.userData.velocity = randomDir.multiplyScalar(0.1 + Math.random() * 0.2);
-
-    // Random rotation
-    fragment.userData.angularVelocity = new THREE.Vector3(
-      (Math.random() - 0.5) * 0.1,
-      (Math.random() - 0.5) * 0.1,
-      (Math.random() - 0.5) * 0.1
-    );
-  });
-}
-
-function updateSimulation(deltaTime) {
-  if (!simBuildingModel) return;
-
-  const magnitude = earthquakeMagnitude;
-
-  // Ground shake effect
-  if (magnitude > 0 && simGroundMesh) {
-    const shakeIntensity = magnitude / 10;
-    const time = Date.now() * 0.01;
-    simGroundMesh.position.y = Math.sin(time * 2) * shakeIntensity * 0.3;
-  }
-
-  // Camera shake
-  if (magnitude > 5.0 && simCamera) {
-    const shakeAmount = (magnitude - 5.0) / 5.0 * 0.5;
-    const time = Date.now() * 0.01;
-    simCamera.position.x += Math.sin(time * 3) * shakeAmount * 0.1;
-    simCamera.position.y += Math.cos(time * 2.5) * shakeAmount * 0.1;
-  }
-
-  // Trigger collapse at magnitude 8.5
-  if (magnitude >= 8.5 && !isCollapsed) {
-    triggerCollapse();
-  }
-
-  // Physics simulation for collapsed fragments
-  if (isCollapsed) {
-    const gravity = new THREE.Vector3(0, -9.81, 0);
-    const dt = deltaTime * 0.001; // Convert to seconds
-
-    buildingFragments.forEach((fragment) => {
-      if (fragment.userData.isFalling) {
-        // Apply gravity
-        fragment.userData.velocity.add(gravity.clone().multiplyScalar(dt));
-
-        // Update position
-        fragment.position.add(fragment.userData.velocity.clone().multiplyScalar(dt));
-
-        // Update rotation
-        fragment.rotation.x += fragment.userData.angularVelocity.x * dt;
-        fragment.rotation.y += fragment.userData.angularVelocity.y * dt;
-        fragment.rotation.z += fragment.userData.angularVelocity.z * dt;
-
-        // Ground collision (simple)
-        if (fragment.position.y < 0) {
-          fragment.position.y = 0;
-          fragment.userData.velocity.y *= -0.3; // Bounce with damping
-          fragment.userData.velocity.x *= 0.8; // Friction
-          fragment.userData.velocity.z *= 0.8;
-
-          // Stop if velocity is very low
-          if (fragment.userData.velocity.length() < 0.1) {
-            fragment.userData.velocity.set(0, 0, 0);
-            fragment.userData.angularVelocity.multiplyScalar(0.9);
-          }
-        }
-      }
-    });
-  }
-}
-
-let lastSimTime = Date.now();
-
-function startSimulationRender() {
-  if (!simRenderer || !simScene || !simCamera) return;
-
-  const animate = () => {
-    const now = Date.now();
-    const deltaTime = now - lastSimTime;
-    lastSimTime = now;
-
-    if (simControls) simControls.update();
-
-    updateSimulation(deltaTime);
-
-    simRenderer.render(simScene, simCamera);
-    simAnimationId = requestAnimationFrame(animate);
-  };
-
-  animate();
-}
-
-function startAutoEarthquake() {
-  if (autoEarthquakeInterval) {
-    clearInterval(autoEarthquakeInterval);
-    autoEarthquakeInterval = null;
-
-    const btn = document.getElementById("auto-earthquake");
-    if (btn) btn.textContent = "Auto Earthquake";
-    return;
-  }
-
-  // Reset first
-  resetSimulation();
-
-  const btn = document.getElementById("auto-earthquake");
-  if (btn) btn.textContent = "Stop Auto";
-
-  let currentMag = 0;
-  autoEarthquakeInterval = setInterval(() => {
-    if (currentMag >= 10) {
-      clearInterval(autoEarthquakeInterval);
-      autoEarthquakeInterval = null;
-      if (btn) btn.textContent = "Auto Earthquake";
-      return;
-    }
-
-    currentMag += 0.1;
-    earthquakeMagnitude = currentMag;
-
-    const slider = document.getElementById("eq-magnitude");
-    if (slider) slider.value = currentMag;
-
-    updateMagnitudeDisplay(currentMag);
-  }, 200);
-}
-
-// Wire up simulation controls
-function wireSimulationControls() {
-  const magnitudeSlider = document.getElementById("eq-magnitude");
-  const resetBtn = document.getElementById("reset-simulation");
-  const autoBtn = document.getElementById("auto-earthquake");
-
-  if (magnitudeSlider) {
-    magnitudeSlider.addEventListener("input", (e) => {
-      earthquakeMagnitude = parseFloat(e.target.value);
-      updateMagnitudeDisplay(earthquakeMagnitude);
-    });
-  }
-
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      if (autoEarthquakeInterval) {
-        clearInterval(autoEarthquakeInterval);
-        autoEarthquakeInterval = null;
-        const btn = document.getElementById("auto-earthquake");
-        if (btn) btn.textContent = "Auto Earthquake";
-      }
-      resetSimulation();
-    });
-  }
-
-  if (autoBtn) {
-    autoBtn.addEventListener("click", startAutoEarthquake);
-  }
-}
-
-function setStatus(text) {
-  if (previewStatus) previewStatus.textContent = text;
-}
-
 window.addEventListener("load", () => {
   initBackgroundVisualizer();
 
@@ -1448,4 +1066,7 @@ window.addEventListener("load", () => {
   if (typeof collectPayload === "function") updatePreview(collectPayload());
   wireInstructionsToggle();
   wireTabs();
+  wireMobileMenu();
+  wireSidebarCollapse();
+  wireHelpPanel();
 });
