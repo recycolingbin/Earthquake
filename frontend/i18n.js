@@ -7,7 +7,7 @@
     /* ── Translation dictionaries ── */
     var LANG = {
         en: {
-            "nav.home": "Home", "nav.terrain": "Terrain", "nav.building": "Building_Risk",
+            "nav.home": "Home", "nav.terrain": "Site Design", "nav.building": "Building_Risk",
             "nav.models": "Models", "nav.collapse": "Collapse Lab", "nav.waves": "Waves",
             "nav.designer": "Designer", "nav.history": "History", "nav.report": "Report",
             "nav.compare": "Compare", "nav.instructions": "Instructions", "nav.menu": "Menu",
@@ -260,7 +260,7 @@
             "opt.siteC": "C", "opt.siteD": "D", "opt.siteE": "E"
         },
         "zh-TW": {
-            "nav.home": "首頁", "nav.terrain": "地形", "nav.building": "建築風險",
+            "nav.home": "首頁", "nav.terrain": "場址設計", "nav.building": "建築風險",
             "nav.models": "結構模型", "nav.collapse": "倒塌實驗室", "nav.waves": "地震波",
             "nav.designer": "建築設計", "nav.history": "歷史紀錄", "nav.report": "結構報告",
             "nav.compare": "比較模式", "nav.instructions": "使用說明", "nav.menu": "選單",
@@ -517,7 +517,7 @@
             "opt.siteC": "C", "opt.siteD": "D", "opt.siteE": "E"
         },
         "zh-CN": {
-            "nav.home": "首页", "nav.terrain": "地形", "nav.building": "建筑风险",
+            "nav.home": "首页", "nav.terrain": "场址设计", "nav.building": "建筑风险",
             "nav.models": "结构模型", "nav.collapse": "倒塌实验室", "nav.waves": "地震波",
             "nav.designer": "建筑设计", "nav.history": "历史记录", "nav.report": "结构报告",
             "nav.compare": "比较模式", "nav.instructions": "使用说明", "nav.menu": "菜单",
