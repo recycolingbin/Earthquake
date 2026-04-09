@@ -262,7 +262,41 @@
             "des-material", "des-foundation", "des-lateral", "des-code", "des-name"];
         fields.forEach(function (id) {
             var el = $(id);
-            if (el) el.addEventListener("input", function () { draw3D(); updateReadouts(); });
+            if (el) {
+                el.addEventListener("input", function () { draw3D(); updateReadouts(); });
+                /* selects fire "change" not "input" on mobile */
+                if (el.tagName === "SELECT") {
+                    el.addEventListener("change", function () { draw3D(); updateReadouts(); });
+                }
+            }
+        });
+
+        /* Validate numeric fields — reject null, 0, or negative */
+        var numericFields = ["des-floors", "des-floor-h", "des-width", "des-depth"];
+        numericFields.forEach(function (id) {
+            var el = $(id);
+            if (!el) return;
+            el.addEventListener("blur", function () {
+                var v = parseFloat(el.value);
+                if (!v || v <= 0 || isNaN(v)) {
+                    el.style.borderColor = "#ef4444";
+                    el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.15)";
+                    /* show inline message */
+                    var msg = el.parentNode.querySelector(".field-error");
+                    if (!msg) {
+                        msg = document.createElement("span");
+                        msg.className = "field-error";
+                        msg.style.cssText = "color:#ef4444;font-size:0.75rem;display:block;margin-top:2px;";
+                        el.parentNode.appendChild(msg);
+                    }
+                    msg.textContent = "Input should be a valid number greater than 0";
+                } else {
+                    el.style.borderColor = "";
+                    el.style.boxShadow = "";
+                    var msg = el.parentNode.querySelector(".field-error");
+                    if (msg) msg.remove();
+                }
+            });
         });
 
         var assessBtn = $("des-assess-btn");

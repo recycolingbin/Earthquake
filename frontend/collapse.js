@@ -872,6 +872,18 @@
         statusBadge.textContent = "Done";
         simStatus.textContent = "Simulation complete \u2013 " + state;
 
+        /* Expose state for Report tab */
+        var dmgIdx = collapsed ? 85 : (magnitude >= 7 ? 55 : magnitude >= 5 ? 30 : 10);
+        window._collapseState = {
+            magnitude: magnitude,
+            pga: magnitude * 0.06,
+            damageIndex: dmgIdx,
+            maxDrift: collapsed ? 4.5 : (magnitude >= 7 ? 2.2 : 0.8),
+            maxAccel: magnitude * 0.08,
+            stories: pieces.length || 33,
+            material: "Cell-Fracture (GLB)"
+        };
+
         if (!collapsed && modelGroup) modelGroup.position.set(0, 0, 0);
         if (groundMesh) groundMesh.position.set(0, 0, 0);
 

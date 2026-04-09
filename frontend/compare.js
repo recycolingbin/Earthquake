@@ -195,20 +195,22 @@
         ];
 
         var html = "";
+        var cellPad = 'padding:0.4rem 0.5rem;';
         for (var i = 0; i < rows.length; i++) {
             var r = rows[i];
             var isHeader = i === 0;
             var tag = isHeader ? "strong" : "span";
+            var borderBot = 'border-bottom:1px solid rgba(148,163,184,0.1);';
             var betterStyle = "";
             if (!isHeader) {
-                if (r[3] === "A") betterStyle = 'style="color:#3b82f6;font-weight:700;"';
-                else if (r[3] === "B") betterStyle = 'style="color:#f97316;font-weight:700;"';
+                if (r[3] === "A") betterStyle = 'color:#3b82f6;font-weight:700;';
+                else if (r[3] === "B") betterStyle = 'color:#f97316;font-weight:700;';
             }
             html += '<div style="display:contents;">';
-            html += '<' + tag + ' style="color:#94a3b8;">' + r[0] + '</' + tag + '>';
-            html += '<' + tag + ' style="color:#3b82f6;">' + r[1] + '</' + tag + '>';
-            html += '<' + tag + ' style="color:#f97316;">' + r[2] + '</' + tag + '>';
-            html += '<' + tag + ' ' + betterStyle + '>' + r[3] + '</' + tag + '>';
+            html += '<' + tag + ' style="color:#94a3b8;' + cellPad + borderBot + '">' + r[0] + '</' + tag + '>';
+            html += '<' + tag + ' style="color:#3b82f6;' + cellPad + borderBot + '">' + r[1] + '</' + tag + '>';
+            html += '<' + tag + ' style="color:#f97316;' + cellPad + borderBot + '">' + r[2] + '</' + tag + '>';
+            html += '<' + tag + ' style="' + betterStyle + cellPad + borderBot + '">' + r[3] + '</' + tag + '>';
             html += '</div>';
         }
         grid.innerHTML = html;

@@ -570,6 +570,17 @@
         el("sim-damage-rating").innerHTML = '<span class="rating-badge ' + cls + '">' + rating + '</span>';
         el("models-sim-status").textContent = "Simulation complete";
 
+        /* Expose state for Report tab */
+        window._modelsState = {
+            magnitude: simMagnitude,
+            pga: simPga,
+            damageIndex: parseFloat(dmg),
+            maxDrift: parseFloat(dmg) > 55 ? 3.5 : parseFloat(dmg) > 25 ? 1.8 : 0.6,
+            maxAccel: simPga * (1 + simSoil * 0.5),
+            stories: simStories,
+            material: d.name
+        };
+
         simHistoryCount++;
         var tbody = el("sim-history-body");
         if (tbody) {

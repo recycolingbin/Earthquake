@@ -11,6 +11,25 @@
             "nav.models": "Models", "nav.collapse": "Collapse Lab", "nav.waves": "Waves",
             "nav.designer": "Designer", "nav.history": "History", "nav.report": "Report",
             "nav.compare": "Compare", "nav.instructions": "Instructions", "nav.menu": "Menu",
+
+            /* ── Section titles / subtitles (data-i18n-title / data-i18n-sub) ── */
+            "home.title": "SeismoSafe",
+            "terrain.title": "Terrain + live 3D base",
+            "terrain.sub": "Upload your DEM/DXF, set a slope hint, and watch the building sit on the ground plane instantly.",
+            "models.title": "Model Comparison",
+            "models.sub": "Select a building model, inspect its 3D form, review performance metrics, and adjust variables for real-time earthquake simulation.",
+            "collapse.title": "Collapse Simulation",
+            "collapse.sub": "Watch the cell-fractured building progressively collapse under earthquake forces (M \u2265 8.0).",
+            "waves.title": "Seismic Wave Visualizer",
+            "waves.sub": "Watch P-wave, S-wave, and Surface wave propagation in real-time with adjustable parameters.",
+            "designer.title": "Building Designer",
+            "designer.sub": "Customize building parameters, materials, and foundation type; then test your design in the Collapse Lab.",
+            "history.title": "Earthquake History",
+            "history.sub": "Browse significant historical earthquakes with magnitude, location, casualties, and mapped epicenters.",
+            "report.title": "Structural Report",
+            "report.sub": "Generate a comprehensive damage assessment report from your latest simulation run.",
+            "compare.title": "Side-by-Side Comparison",
+            "compare.sub": "Run two simulations simultaneously with different parameters and compare results.",
             "manual.title": "User Manual",
 
             /* ── Buttons ── */
@@ -713,13 +732,13 @@
         for (var j = 0; j < titles.length; j++) {
             var tk = titles[j].getAttribute("data-i18n-title");
             var val = t(tk);
-            if (val !== tk) titles[j].textContent = val;
+            titles[j].textContent = val;
         }
         var subs = document.querySelectorAll("[data-i18n-sub]");
         for (var k = 0; k < subs.length; k++) {
             var sk = subs[k].getAttribute("data-i18n-sub");
             var sv = t(sk);
-            if (sv !== sk) subs[k].textContent = sv;
+            subs[k].textContent = sv;
         }
 
         /* Show/hide language-specific content blocks (class="lang-en", "lang-zh-TW", "lang-zh-CN") */

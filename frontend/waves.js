@@ -236,6 +236,11 @@
             soil = soilS.value;
             updateReadouts();
         });
+        /* selects fire "change" not "input" on iOS/mobile */
+        if (soilS) soilS.addEventListener("change", function () {
+            soil = soilS.value;
+            updateReadouts();
+        });
         var runBtn = $("waves-run-btn");
         var rstBtn = $("waves-reset-btn");
         if (runBtn) runBtn.addEventListener("click", start);
@@ -247,6 +252,16 @@
         inited = true;
         canvas = $("waves-canvas");
         if (!canvas) return;
+        /* Resize canvas to fit container on mobile */
+        var container = canvas.parentElement;
+        if (container) {
+            var cw = container.clientWidth;
+            if (cw > 0 && cw < canvas.width) {
+                var ratio = canvas.height / canvas.width;
+                canvas.width = Math.max(cw * 2, 600);
+                canvas.height = Math.round(canvas.width * ratio);
+            }
+        }
         ctx = canvas.getContext("2d");
         wireControls();
         updateReadouts();
