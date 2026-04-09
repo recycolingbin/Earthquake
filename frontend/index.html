@@ -973,13 +973,13 @@
       </div>
 
       <div class="designer-grid">
-        <!-- Structure params -->
+        <!-- All building params in one compact box -->
         <div class="mini-card glow-card">
           <div class="card-header-row">
             <div class="pill pill-ghost" data-i18n="des.structure">Structure</div>
             <span class="eyebrow" data-i18n="des.geometry">Geometry</span>
           </div>
-          <div class="stacked-form">
+          <div class="stacked-form compact-form">
             <label><span data-i18n="des.bldgName">Building Name</span> <input type="text" id="des-name"
                 value="My Building" /></label>
             <div class="two-col">
@@ -994,49 +994,43 @@
               <label><span data-i18n="des.depth">Depth (m)</span> <input type="number" id="des-depth" value="15"
                   step="0.5" min="5" max="80" /></label>
             </div>
-            <label><span data-i18n="des.shape">Shape</span>
-              <select id="des-shape">
-                <option value="rectangular" data-i18n="opt.rectangular">Rectangular</option>
-                <option value="l-shape" data-i18n="opt.lShape">L-Shape</option>
-                <option value="u-shape" data-i18n="opt.uShape">U-Shape</option>
-                <option value="tower" data-i18n="opt.tower">Tower (1:3+ ratio)</option>
-              </select>
-            </label>
-          </div>
-        </div>
-
-        <!-- Material + Foundation -->
-        <div class="mini-card glow-card">
-          <div class="card-header-row">
-            <div class="pill pill-ghost" data-i18n="des.matFound">Material & Foundation</div>
-            <span class="eyebrow" data-i18n="des.structSys">Structural system</span>
-          </div>
-          <div class="stacked-form">
-            <label><span data-i18n="des.primaryMat">Primary Material</span>
-              <select id="des-material">
-                <option value="rc" data-i18n="opt.reinforcedConcrete">Reinforced Concrete</option>
-                <option value="steel" data-i18n="opt.steelFrame">Steel Frame</option>
-                <option value="timber" data-i18n="opt.timber">Timber</option>
-                <option value="masonry" data-i18n="opt.masonry">Masonry</option>
-                <option value="composite" data-i18n="opt.composite">Composite (Steel+RC)</option>
-              </select>
-            </label>
-            <label><span data-i18n="des.foundType">Foundation Type</span>
-              <select id="des-foundation">
-                <option value="shallow" data-i18n="opt.shallow">Shallow (Spread/Mat)</option>
-                <option value="deep" data-i18n="opt.deep">Deep (Pile)</option>
-                <option value="isolated" data-i18n="opt.isolated">Base Isolated</option>
-                <option value="damped" data-i18n="opt.damped">Damped Foundation</option>
-              </select>
-            </label>
-            <label><span data-i18n="des.lateralSys">Lateral System</span>
-              <select id="des-lateral">
-                <option value="moment-frame" data-i18n="opt.momentFrame">Moment Frame</option>
-                <option value="shear-wall" data-i18n="opt.shearWall">Shear Wall</option>
-                <option value="braced-frame" data-i18n="opt.bracedFrame">Braced Frame</option>
-                <option value="dual" data-i18n="opt.dual">Dual System</option>
-              </select>
-            </label>
+            <div class="two-col">
+              <label><span data-i18n="des.shape">Shape</span>
+                <select id="des-shape">
+                  <option value="rectangular" data-i18n="opt.rectangular">Rectangular</option>
+                  <option value="l-shape" data-i18n="opt.lShape">L-Shape</option>
+                  <option value="u-shape" data-i18n="opt.uShape">U-Shape</option>
+                  <option value="tower" data-i18n="opt.tower">Tower (1:3+ ratio)</option>
+                </select>
+              </label>
+              <label><span data-i18n="des.primaryMat">Primary Material</span>
+                <select id="des-material">
+                  <option value="rc" data-i18n="opt.reinforcedConcrete">Reinforced Concrete</option>
+                  <option value="steel" data-i18n="opt.steelFrame">Steel Frame</option>
+                  <option value="timber" data-i18n="opt.timber">Timber</option>
+                  <option value="masonry" data-i18n="opt.masonry">Masonry</option>
+                  <option value="composite" data-i18n="opt.composite">Composite (Steel+RC)</option>
+                </select>
+              </label>
+            </div>
+            <div class="two-col">
+              <label><span data-i18n="des.foundType">Foundation Type</span>
+                <select id="des-foundation">
+                  <option value="shallow" data-i18n="opt.shallow">Shallow (Spread/Mat)</option>
+                  <option value="deep" data-i18n="opt.deep">Deep (Pile)</option>
+                  <option value="isolated" data-i18n="opt.isolated">Base Isolated</option>
+                  <option value="damped" data-i18n="opt.damped">Damped Foundation</option>
+                </select>
+              </label>
+              <label><span data-i18n="des.lateralSys">Lateral System</span>
+                <select id="des-lateral">
+                  <option value="moment-frame" data-i18n="opt.momentFrame">Moment Frame</option>
+                  <option value="shear-wall" data-i18n="opt.shearWall">Shear Wall</option>
+                  <option value="braced-frame" data-i18n="opt.bracedFrame">Braced Frame</option>
+                  <option value="dual" data-i18n="opt.dual">Dual System</option>
+                </select>
+              </label>
+            </div>
             <label><span data-i18n="des.seismicCode">Seismic Design Code</span>
               <select id="des-code">
                 <option value="ibc" data-i18n="opt.ibc">IBC 2021</option>
@@ -1054,7 +1048,20 @@
             <div class="pill pill-ghost" data-i18n="des.3dPreview">3D Preview</div>
             <span class="eyebrow" id="des-preview-label">8-story Rectangular</span>
           </div>
-          <canvas id="designer-canvas" width="500" height="400"></canvas>
+          <div id="designer-3d-container" style="position:relative;width:100%;height:600px;">
+            <canvas id="designer-canvas"></canvas>
+            <!-- structural info overlay -->
+            <div id="des-struct-overlay" style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:4px;pointer-events:none;z-index:2;">
+              <span id="des-ov-material" class="des-overlay-tag"></span>
+              <span id="des-ov-foundation" class="des-overlay-tag"></span>
+              <span id="des-ov-lateral" class="des-overlay-tag"></span>
+            </div>
+            <!-- earthquake controls -->
+            <div class="des-quake-controls">
+              <label class="des-mag-label">M <input type="range" id="des-quake-mag" min="1" max="10" step="0.5" value="7" class="des-mag-slider" /><span id="des-quake-mag-val">7.0</span></label>
+              <button type="button" id="des-quake-btn" class="des-quake-btn" title="Test Earthquake">🌊 Test Quake</button>
+            </div>
+          </div>
           <div class="designer-readouts">
             <div class="collapse-stat-item"><span class="collapse-stat-num" id="des-total-area">—</span><span
                 class="collapse-stat-label" data-i18n="des.floorArea">Floor Area (m²)</span></div>
@@ -1095,8 +1102,6 @@
         <div class="controls-actions" style="margin-top:1rem">
           <button type="button" id="des-assess-btn" class="sim-run-btn" data-i18n="btn.assessDesign">📐 Assess
             Design</button>
-          <button type="button" id="des-export-btn" class="sim-reset-btn" data-i18n="btn.sendCollapse">📤 Send to
-            Collapse Lab</button>
         </div>
       </div>
       <details class="tab-manual">

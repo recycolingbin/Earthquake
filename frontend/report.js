@@ -52,28 +52,38 @@
                 data.stories = cs.stories || 33;
                 data.material = cs.material || "Cell-Fracture (GLB)";
                 data.available = true;
-            } else {
-                /* Estimate from model stats */
-                data.magnitude = 7.0;
-                data.pga = 0.40;
-                data.damageIndex = 45;
-                data.maxDrift = 1.8;
-                data.maxAccel = 0.55;
-                data.stories = 33;
-                data.material = "Cell-Fracture (GLB)";
-                data.available = true;
             }
         } else if (src === "designer") {
             var dr = window._designerResult;
             if (dr) {
                 data.available = true;
-                data.stories = dr.floors || 5;
+                data.stories = dr.floors || 8;
                 data.material = dr.material || "RC";
-                data.damageIndex = 100 - (dr.score || 50);
-                data.maxDrift = dr.score > 70 ? 0.8 : dr.score > 40 ? 2.2 : 4.5;
-                data.maxAccel = dr.score > 70 ? 0.3 : dr.score > 40 ? 0.6 : 1.2;
-                data.magnitude = 7.0;
-                data.pga = 0.4;
+                data.foundation = dr.foundation || "Shallow";
+                data.lateral = dr.lateral || "moment-frame";
+                data.shape = dr.shape || "rectangular";
+                data.width = dr.width || 20;
+                data.depth = dr.depth || 15;
+                data.totalHeight = dr.totalHeight || 25.6;
+                data.score = dr.score || 50;
+                /* Use real quake sim data if available, else estimate from score */
+                if (dr.quakeRan) {
+                    data.magnitude = dr.magnitude;
+                    data.pga = dr.pga;
+                    data.damageIndex = dr.damageIndex;
+                    data.maxDrift = dr.maxDrift;
+                    data.maxAccel = dr.maxAccel;
+                    data.collapsed = dr.collapsed;
+                    data.cracked = dr.cracked;
+                } else {
+                    /* Estimate from assessment score only */
+                    var s = dr.score || 50;
+                    data.damageIndex = Math.round(100 - s);
+                    data.maxDrift = s > 70 ? 0.8 : s > 40 ? 2.2 : 4.5;
+                    data.maxAccel = s > 70 ? 0.3 : s > 40 ? 0.6 : 1.2;
+                    data.magnitude = 0;
+                    data.pga = 0;
+                }
                 data.damping = 0.05;
             }
         } else if (src === "models") {
@@ -136,12 +146,21 @@
 
         /* key metrics */
         html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.75rem;margin-bottom:1.5rem;">';
-        html += metricCard("Earthquake", "M " + data.magnitude.toFixed(1), "PGA " + data.pga.toFixed(2) + " g");
+        if (data.magnitude > 0) {
+            html += metricCard("Earthquake", "M " + data.magnitude.toFixed(1), "PGA " + data.pga.toFixed(2) + " g");
+        } else {
+            html += metricCard("Earthquake", "No test run", "Assess-only mode");
+        }
         html += metricCard("Damage Index", data.damageIndex.toFixed(0) + " %", grade.label);
         html += metricCard("Peak Drift", data.maxDrift.toFixed(1) + " %", data.maxDrift > 2.5 ? "Exceeds limit" : "Within limit");
         html += metricCard("Max Acceleration", data.maxAccel.toFixed(2) + " g", "At roof level");
         html += metricCard("Building", data.stories + " stories", data.material);
         html += metricCard("Repair Cost Ratio", (repairCostRatio * 100).toFixed(0) + " %", "of replacement cost");
+        if (src === "designer") {
+            html += metricCard("Foundation", data.foundation || "—", data.lateral ? data.lateral.replace("-", " ") : "—");
+            html += metricCard("Dimensions", (data.width || "—") + " × " + (data.depth || "—") + " m", "H " + (data.totalHeight ? data.totalHeight.toFixed(1) : "—") + " m");
+            html += metricCard("Seismic Score", (data.score || "—") + " / 100", data.score >= 70 ? "Good" : data.score >= 45 ? "Fair" : "Poor");
+        }
         html += '</div>';
 
         /* damage description */

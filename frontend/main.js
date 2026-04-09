@@ -959,6 +959,11 @@ function wireMobileMenu() {
   mobileMenuToggle.addEventListener("click", () => {
     const isOpen = document.body.classList.contains("sidebar-open");
     setOpen(!isOpen);
+    /* Also collapse the sidebar on desktop when hamburger is clicked */
+    if (!window.matchMedia("(max-width: 900px)").matches) {
+      document.body.classList.add("sidebar-collapsed");
+      localStorage.setItem("sidebar-collapsed", "true");
+    }
   });
 
   mobileMenuBackdrop?.addEventListener("click", () => setOpen(false));

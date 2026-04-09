@@ -249,14 +249,20 @@
         var container = canvas.parentElement;
         var size = Math.min(container.clientWidth || 380, 380);
         if (size < 50) size = 380;
-        canvas.width = size;
-        canvas.height = size;
+
+        /* HiDPI: scale canvas buffer for sharp rendering */
+        var dpr = window.devicePixelRatio || 1;
+        canvas.width = size * dpr;
+        canvas.height = size * dpr;
         canvas.style.width = size + "px";
         canvas.style.height = size + "px";
 
         var ctx = canvas.getContext("2d");
-        var w = canvas.width, h = canvas.height;
-        var cx = w / 2, cy = h / 2, r = Math.min(w, h) * 0.34;
+        ctx.scale(dpr, dpr);
+
+        /* All drawing now happens in CSS-pixel coordinates */
+        var w = size, h = size;
+        var cx = w / 2, cy = h / 2, r = Math.min(w, h) * 0.3;
         ctx.clearRect(0, 0, w, h);
 
         var keys = ["strength", "eco", "quake", "cost", "dura"];
@@ -264,6 +270,7 @@
         var colors = ["#f97316", "#22c55e", "#ef4444", "#3b82f6", "#a855f7"];
         var n = keys.length;
 
+        /* Grid rings */
         for (var ring = 1; ring <= 5; ring++) {
             ctx.beginPath();
             var rr = (ring / 5) * r;
@@ -277,36 +284,39 @@
             ctx.strokeStyle = "rgba(148,163,184,0.12)";
             ctx.lineWidth = 1;
             ctx.stroke();
-            ctx.fillStyle = "rgba(148,163,184,0.3)";
+            ctx.fillStyle = "rgba(148,163,184,0.25)";
             ctx.font = "9px Inter, sans-serif";
             ctx.textAlign = "left";
             ctx.fillText((ring * 20) + "%", cx + 3, cy - rr + 3);
         }
 
+        /* Axis lines + labels (label on first line, value below it) */
         for (var i = 0; i < n; i++) {
             var angle = (Math.PI * 2 * i) / n - Math.PI / 2;
             ctx.beginPath();
             ctx.moveTo(cx, cy);
             ctx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
-            ctx.strokeStyle = "rgba(148,163,184,0.2)";
+            ctx.strokeStyle = "rgba(148,163,184,0.15)";
             ctx.lineWidth = 1;
             ctx.stroke();
 
-            var lx = cx + Math.cos(angle) * (r + 28);
-            var ly = cy + Math.sin(angle) * (r + 28);
+            /* Label — pushed further out from polygon edge */
+            var labelDist = r + 30;
+            var lx = cx + Math.cos(angle) * labelDist;
+            var ly = cy + Math.sin(angle) * labelDist;
             ctx.fillStyle = colors[i];
-            ctx.font = "bold 11px Inter, sans-serif";
+            ctx.font = "600 11px Inter, sans-serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText(labels[i], lx, ly);
 
-            ctx.fillStyle = "#e2e8f0";
+            /* Value — on a separate line below the label */
+            ctx.fillStyle = "#cbd5e1";
             ctx.font = "10px Inter, sans-serif";
-            var vx = cx + Math.cos(angle) * (r + 44);
-            var vy = cy + Math.sin(angle) * (r + 44);
-            ctx.fillText(stats[keys[i]], vx, vy);
+            ctx.fillText(stats[keys[i]], lx, ly + 14);
         }
 
+        /* Data polygon — flat fill, no gradient */
         ctx.beginPath();
         keys.forEach(function (k, i) {
             var angle = (Math.PI * 2 * i) / n - Math.PI / 2;
@@ -316,31 +326,22 @@
             i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         });
         ctx.closePath();
-        var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-        grad.addColorStop(0, "rgba(56,189,248,0.25)");
-        grad.addColorStop(1, "rgba(56,189,248,0.05)");
-        ctx.fillStyle = grad;
+        ctx.fillStyle = "rgba(56,189,248,0.12)";
         ctx.fill();
-        ctx.strokeStyle = "#38bdf8";
-        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = "rgba(56,189,248,0.7)";
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
+        /* Simple dots at data points — no glow */
         keys.forEach(function (k, i) {
             var angle = (Math.PI * 2 * i) / n - Math.PI / 2;
             var v = (stats[k] / 100) * r;
             var px = cx + Math.cos(angle) * v;
             var py = cy + Math.sin(angle) * v;
             ctx.beginPath();
-            ctx.arc(px, py, 8, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(56,189,248,0.2)";
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(px, py, 4, 0, Math.PI * 2);
+            ctx.arc(px, py, 3, 0, Math.PI * 2);
             ctx.fillStyle = colors[i];
             ctx.fill();
-            ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 1;
-            ctx.stroke();
         });
     }
 
@@ -514,9 +515,9 @@
         grid.innerHTML = MODEL_DATA.map(function (d, i) {
             return '<div class="comparison-item' + (i === currentModelIdx ? " active" : "") + '">' +
                 '<strong>' + d.name + '</strong>' +
-                '<span class="comparison-metric">Quake Res. ' + d.stats.quake + '%</span>' +
-                '<span class="comparison-metric">Cost Eff. ' + d.stats.cost + '%</span>' +
-                '<span class="comparison-metric">Strength ' + d.stats.strength + '%</span>' +
+                '<span class="comparison-metric">Quake Res.&ensp;<b>' + d.stats.quake + '%</b></span>' +
+                '<span class="comparison-metric">Cost Eff.&ensp;<b>' + d.stats.cost + '%</b></span>' +
+                '<span class="comparison-metric">Strength&ensp;<b>' + d.stats.strength + '%</b></span>' +
                 '</div>';
         }).join("");
     }
@@ -557,7 +558,9 @@
         });
 
         var d = MODEL_DATA[currentModelIdx];
-        var baseDmg = (simMagnitude / 10) * (simPga / 1.5) * simSoil * (simStories / 30) * (1 - d.dampingBase) * 100;
+        var durationFactor = Math.min(simDuration / 15, 2.0);
+        var dampingFactor = Math.max(0.2, 1 - simDamping * 5);
+        var baseDmg = (simMagnitude / 10) * (simPga / 1.5) * simSoil * (simStories / 30) * (1 - d.dampingBase) * durationFactor * dampingFactor * 100;
         var quakeFactor = 1 - d.stats.quake / 120;
         var dmg = Math.min(Math.max(baseDmg * quakeFactor, 0), 100).toFixed(1);
 
@@ -578,7 +581,10 @@
             maxDrift: parseFloat(dmg) > 55 ? 3.5 : parseFloat(dmg) > 25 ? 1.8 : 0.6,
             maxAccel: simPga * (1 + simSoil * 0.5),
             stories: simStories,
-            material: d.name
+            material: d.name,
+            soilAmp: simSoil,
+            duration: simDuration,
+            damping: simDamping
         };
 
         simHistoryCount++;

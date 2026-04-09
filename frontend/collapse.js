@@ -70,7 +70,7 @@
 
     /* tracking */
     var peakVelocity = 0;
-    var totalKineticEnergy = 0;
+    var peakKineticEnergy = 0;
 
     var COLLAPSE_THRESHOLD = 8.0;
     var floorPiece = null;  /* the 'Plane' mesh from the model */
@@ -483,8 +483,8 @@
         var center = box.getCenter(new THREE.Vector3());
         var maxDim = Math.max(size.x, size.y, size.z);
         if (maxDim < 0.01) maxDim = 10;
-        var dist = maxDim / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5))) * 1.4;
-        camera.position.set(center.x + dist * 0.6, center.y + dist * 0.45, center.z + dist * 0.7);
+        var dist = maxDim / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5))) * 1.0;
+        camera.position.set(center.x + dist * 0.45, center.y + dist * 0.35, center.z + dist * 0.55);
         camera.near = 0.01;
         camera.far = Math.max(dist * 30, 2000);
         camera.updateProjectionMatrix();
@@ -500,6 +500,8 @@
         if (!modelBBox || pieces.length === 0) return;
         var bboxSize = modelBBox.getSize(new THREE.Vector3());
         var bboxMinY = modelBBox.min.y;
+        var DAMAGE_VISIBLE = 0.05;
+        var anyDamage = false;
 
         pieces.forEach(function (mesh, i) {
             var pd = pieceData[i];
@@ -508,32 +510,41 @@
             mesh.getWorldPosition(wp);
 
             var heightNorm = Math.min(Math.max((wp.y - bboxMinY) / bboxSize.y, 0), 1);
-            var stress = heightNorm * shakeIntensity * 12;
+            var stress = heightNorm * shakeIntensity * 2 * (0.5 + crackHeight);
             pd.damage = Math.min(Math.max(pd.damage, stress), 1);
 
             if (pd.detached) pd.damage = 1;
 
-            /* green(0) → yellow(0.5) → red(1) */
+            /* Below threshold → keep original material color */
+            if (pd.damage < DAMAGE_VISIBLE) return;
+            anyDamage = true;
+
+            /* original → yellow(0.5) → red(1) — blend from original color */
             var d = pd.damage;
+            var origR = ((mesh.material._origColor >> 16) & 255) / 255;
+            var origG = ((mesh.material._origColor >> 8) & 255) / 255;
+            var origB = (mesh.material._origColor & 255) / 255;
             var r, g, b;
             if (d < 0.5) {
-                r = Math.round(34 + (234 - 34) * (d * 2));
-                g = Math.round(197 + (179 - 197) * (d * 2));
-                b = Math.round(94 + (8 - 94) * (d * 2));
+                var t = d * 2;
+                r = origR + (0.918 - origR) * t;
+                g = origG + (0.702 - origG) * t;
+                b = origB + (0.031 - origB) * t;
             } else {
-                r = Math.round(234 + (239 - 234) * ((d - 0.5) * 2));
-                g = Math.round(179 + (68 - 179) * ((d - 0.5) * 2));
-                b = Math.round(8 + (68 - 8) * ((d - 0.5) * 2));
+                var t = (d - 0.5) * 2;
+                r = 0.918 + (0.937 - 0.918) * t;
+                g = 0.702 + (0.267 - 0.702) * t;
+                b = 0.031 + (0.267 - 0.031) * t;
             }
 
             if (mesh.material) {
-                mesh.material.color.setRGB(r / 255, g / 255, b / 255);
+                mesh.material.color.setRGB(r, g, b);
                 mesh.material.emissive = mesh.material.emissive || new THREE.Color();
                 mesh.material.emissive.setRGB(d * 0.15, 0, 0);
             }
         });
 
-        if (heatmapLegend) heatmapLegend.style.display = "block";
+        if (heatmapLegend) heatmapLegend.style.display = anyDamage ? "block" : "none";
     }
 
     function resetDamageColors() {
@@ -561,7 +572,7 @@
         replayMode = false;
         replayFrames = [];
         peakVelocity = 0;
-        totalKineticEnergy = 0;
+        peakKineticEnergy = 0;
         shakeData = [];
         dustParticles = [];
 
@@ -603,15 +614,18 @@
         simElapsed += DT;
 
         var progress = simElapsed / duration;
-        var shakeIntensity = magnitude * 0.06 * Math.sin(Math.PI * Math.min(progress * 2, 1));
+        /* Exponential scaling: M1→~0.01, M5→0.25, M8→0.64, M10→1.0 */
+        var magScale = Math.pow(magnitude / 10, 2);
+        var envelope = Math.sin(Math.PI * Math.min(progress * 2, 1));
+        var shakeIntensity = magScale * envelope;
 
         /* ground shake – move the whole modelGroup */
         var freq1 = 8 + magnitude * 0.5;
         var freq2 = 5.3 + magnitude * 0.3;
 
         if (!collapsed) {
-            var dx = Math.sin(simElapsed * freq1) * shakeIntensity * 0.25;
-            var dz = Math.cos(simElapsed * freq2) * shakeIntensity * 0.18;
+            var dx = Math.sin(simElapsed * freq1) * shakeIntensity * 0.6;
+            var dz = Math.cos(simElapsed * freq2) * shakeIntensity * 0.45;
             modelGroup.position.x = dx;
             modelGroup.position.z = dz;
             if (groundMesh) {
@@ -622,11 +636,17 @@
             var accel = Math.sin(simElapsed * freq1) * shakeIntensity;
             shakeData.push(accel);
             if (shakeData.length > SHAKE_MAX) shakeData.shift();
+
+            /* Track shake energy — keep peak */
+            var shakeSpeed = Math.sqrt(dx * dx + dz * dz) / DT;
+            if (shakeSpeed > peakVelocity) peakVelocity = shakeSpeed;
+            var shakeKE = 0.5 * pieces.length * shakeSpeed * shakeSpeed;
+            if (shakeKE > peakKineticEnergy) peakKineticEnergy = shakeKE;
         }
 
         /* crack formation – shrink pieces to reveal fracture gaps */
-        if (magnitude >= 4 && simElapsed > 0.3) {
-            var crackRate = shakeIntensity * 0.8;
+        if (magnitude >= 6 && simElapsed > 0.3) {
+            var crackRate = shakeIntensity * 0.8 * (0.5 + crackHeight);
             for (var ci = 0; ci < pieces.length; ci++) {
                 var cpd = pieceData[ci];
                 if (cpd.detached) continue;
@@ -672,8 +692,8 @@
         /* keep shaking floor during collapse */
         if (collapsed) {
             var shakeDecay = Math.max(0, 1 - (simElapsed - collapseStartTime) / (duration * 0.6));
-            var dxc = Math.sin(simElapsed * freq1) * shakeIntensity * 0.15 * shakeDecay;
-            var dzc = Math.cos(simElapsed * freq2) * shakeIntensity * 0.10 * shakeDecay;
+            var dxc = Math.sin(simElapsed * freq1) * shakeIntensity * 0.5 * shakeDecay;
+            var dzc = Math.cos(simElapsed * freq2) * shakeIntensity * 0.35 * shakeDecay;
             modelGroup.position.x = dxc;
             modelGroup.position.z = dzc;
             if (groundMesh) {
@@ -683,6 +703,10 @@
             var accelC = Math.sin(simElapsed * freq1) * shakeIntensity * shakeDecay;
             shakeData.push(accelC);
             if (shakeData.length > SHAKE_MAX) shakeData.shift();
+
+            /* Track shake energy during collapse */
+            var collapseShakeSpeed = Math.sqrt(dxc * dxc + dzc * dzc) / DT;
+            if (collapseShakeSpeed > peakVelocity) peakVelocity = collapseShakeSpeed;
         }
 
         /* damage heatmap */
@@ -690,6 +714,7 @@
 
         /* animate detached pieces – all in WORLD space now */
         if (collapsed) {
+            var frameKE = 0;
             for (var pi = 0; pi < pieces.length; pi++) {
                 var pd = pieceData[pi];
                 if (!pd.detached || pd.grounded) continue;
@@ -711,10 +736,10 @@
                 pd.velocity.x *= 0.999;
                 pd.velocity.z *= 0.999;
 
-                /* track stats */
+                /* track stats — keep peak KE */
                 var speed = pd.velocity.length();
                 if (speed > peakVelocity) peakVelocity = speed;
-                totalKineticEnergy += 0.5 * speed * speed * DT;
+                frameKE += 0.5 * speed * speed;
 
                 /* ground collision – position.y IS world Y now */
                 if (mesh.position.y <= 0.02) {
@@ -745,10 +770,11 @@
                     }
                 }
             }
+            if (frameKE > peakKineticEnergy) peakKineticEnergy = frameKE;
         }
 
         /* dust during shaking (pre-collapse) */
-        if (simRunning && !collapsed && magnitude >= 5) {
+        if (simRunning && !collapsed && magnitude >= 6) {
             if (Math.random() < magnitude * 0.02) {
                 var sw = dustCanvas ? dustCanvas.width : 600;
                 var sh = dustCanvas ? dustCanvas.height : 420;
@@ -802,7 +828,7 @@
         /* Wave sweeps from top to bottom over ~3 seconds */
         collapseWaveY = modelBBox.max.y + 0.1;
         collapseWaveFloor = modelBBox.min.y - 1;
-        collapseWaveSpeed = bboxSize.y / 3.0;
+        collapseWaveSpeed = bboxSize.y / (4.0 - crackHeight * 2.0);
 
         console.info('[Collapse] Progressive collapse: top=' + collapseWaveY.toFixed(2) +
             ', floor=' + collapseWaveFloor.toFixed(2) + ', speed=' + collapseWaveSpeed.toFixed(2));
@@ -861,10 +887,17 @@
     function finishSim() {
         simRunning = false;
 
+        /* Compute average damage from actual piece simulation data */
+        var avgDamage = 0;
+        if (pieceData.length > 0) {
+            for (var di = 0; di < pieceData.length; di++) avgDamage += pieceData[di].damage;
+            avgDamage /= pieceData.length;
+        }
+
         var state, cls;
         if (collapsed) { state = "Collapsed"; cls = "high"; }
-        else if (magnitude >= 7) { state = "Heavy Damage"; cls = "moderate"; }
-        else if (magnitude >= 5) { state = "Moderate Damage"; cls = "moderate"; }
+        else if (avgDamage > 0.5) { state = "Heavy Damage"; cls = "moderate"; }
+        else if (avgDamage > 0.15) { state = "Moderate Damage"; cls = "moderate"; }
         else { state = "Minor / None"; cls = "low"; }
 
         stateValue.textContent = state;
@@ -873,13 +906,13 @@
         simStatus.textContent = "Simulation complete \u2013 " + state;
 
         /* Expose state for Report tab */
-        var dmgIdx = collapsed ? 85 : (magnitude >= 7 ? 55 : magnitude >= 5 ? 30 : 10);
+        var dmgIdx = collapsed ? Math.round(75 + avgDamage * 25) : Math.round(avgDamage * 70);
         window._collapseState = {
             magnitude: magnitude,
-            pga: magnitude * 0.06,
+            pga: Math.pow(magnitude / 10, 2) * 0.6,
             damageIndex: dmgIdx,
-            maxDrift: collapsed ? 4.5 : (magnitude >= 7 ? 2.2 : 0.8),
-            maxAccel: magnitude * 0.08,
+            maxDrift: collapsed ? 4.5 : avgDamage * 3.0,
+            maxAccel: Math.pow(magnitude / 10, 2) * 0.8,
             stories: pieces.length || 33,
             material: "Cell-Fracture (GLB)"
         };
@@ -956,7 +989,7 @@
         if (elDetached) elDetached.textContent = detached || "\u2014";
         if (elGrounded) elGrounded.textContent = grounded || "\u2014";
         if (elMaxV) elMaxV.textContent = peakVelocity > 0 ? peakVelocity.toFixed(1) : "\u2014";
-        if (elEnergy) elEnergy.textContent = totalKineticEnergy > 0 ? (totalKineticEnergy * 0.001).toFixed(2) : "\u2014";
+        if (elEnergy) elEnergy.textContent = peakKineticEnergy > 0.001 ? peakKineticEnergy.toFixed(2) : "\u2014";
         if (elCrack) elCrack.textContent = Math.round(crackHeight * 100) + "%";
     }
 
@@ -970,7 +1003,7 @@
         replayMode = false;
         replayFrames = [];
         peakVelocity = 0;
-        totalKineticEnergy = 0;
+        peakKineticEnergy = 0;
         shakeData = [];
         dustParticles = [];
 

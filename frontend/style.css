@@ -2007,6 +2007,33 @@ body {
   margin-top: 0.6rem;
 }
 
+.comparison-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.7rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
+}
+
+.comparison-item.active {
+  border-color: rgba(99, 102, 241, 0.35);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.comparison-metric {
+  display: block;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.comparison-metric b {
+  color: #e2e8f0;
+}
+
 @media (max-width: 800px) {
   .comparison-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -2537,16 +2564,115 @@ body {
    ═══════════════════════════════════════════════════ */
 .designer-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.2fr;
+  grid-template-columns: 1fr 2fr;
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
+.compact-form label { margin-bottom: 0.15rem; }
+.compact-form input, .compact-form select { padding: 0.3rem 0.5rem; font-size: 0.82rem; }
+
 .designer-preview-card canvas {
   width: 100%;
-  height: 400px;
+  height: 600px;
   border-radius: 8px;
   background: #0a0e1a;
+}
+
+/* structural info overlay tags */
+.des-overlay-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.des-overlay-tag[data-type="material"] {
+  border-left: 3px solid #38bdf8;
+}
+
+.des-overlay-tag[data-type="foundation"] {
+  border-left: 3px solid #22c55e;
+}
+
+.des-overlay-tag[data-type="lateral"] {
+  border-left: 3px solid #f59e0b;
+}
+
+/* earthquake controls bar */
+.des-quake-controls {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+.des-mag-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.des-mag-slider {
+  width: 80px;
+  accent-color: #ef4444;
+  cursor: pointer;
+}
+#des-quake-mag-val {
+  min-width: 2ch;
+  color: #fca5a5;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+.des-quake-btn {
+  padding: 5px 12px;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 6px;
+  background: rgba(127, 29, 29, 0.6);
+  color: #fca5a5;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.des-quake-btn:hover {
+  background: rgba(185, 28, 28, 0.7);
+  border-color: #ef4444;
+}
+
+.des-quake-btn.shaking {
+  animation: quake-pulse 0.5s ease-in-out infinite alternate;
+  background: rgba(185, 28, 28, 0.85);
+  border-color: #ef4444;
+  color: #fff;
+}
+
+@keyframes quake-pulse {
+  from {
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+  }
+
+  to {
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.7);
+  }
 }
 
 .designer-readouts {
@@ -2666,6 +2792,7 @@ body {
     flex-direction: column;
     gap: 0.75rem;
   }
+
   .report-source-row label {
     white-space: normal;
     word-break: normal;
@@ -3987,7 +4114,7 @@ input[type="radio"] {
   appearance: none;
   width: 18px;
   height: 18px;
-  border: 2px solid var(--c-border, rgba(148,163,184,0.3));
+  border: 2px solid var(--c-border, rgba(148, 163, 184, 0.3));
   border-radius: 50%;
   background: transparent;
   flex-shrink: 0;
@@ -4003,7 +4130,7 @@ input[type="radio"]:checked {
 
 input[type="radio"]:focus {
   outline: none;
-  box-shadow: inset 0 0 0 3px var(--c-bg, #0a0e1a), 0 0 0 2px rgba(99,102,241,0.3);
+  box-shadow: inset 0 0 0 3px var(--c-bg, #0a0e1a), 0 0 0 2px rgba(99, 102, 241, 0.3);
 }
 
 /* ── Loading / status animations ── */
