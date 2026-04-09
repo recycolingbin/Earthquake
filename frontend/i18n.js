@@ -14,6 +14,7 @@
 
             /* ── Section titles / subtitles (data-i18n-title / data-i18n-sub) ── */
             "home.title": "SeismoSafe",
+            "home.desc": "An interactive education platform for seismic design",
             "terrain.title": "Our Sustainable Seismic Design",
             "terrain.sub": "A crew-designed earthquake-resilient structure — sustainable, culturally respectful, and built with low carbon-footprint materials.",
             "terrain.sustainable": "Sustainable Design",
@@ -266,6 +267,7 @@
             "manual.title": "使用手冊",
 
             "home.title": "SeismoSafe 地震模擬平台",
+            "home.desc": "互動式抗震設計教育平台",
             "home.sub": "地形上傳、簡易建築模型、SAP2000 匯出及風險評分。",
             "terrain.title": "我們的永續抗震設計",
             "terrain.sub": "團隊設計的抗震結構 — 永續、尊重當地文化，採用低碳足跡材料建造。",
@@ -522,6 +524,7 @@
             "manual.title": "使用手册",
 
             "home.title": "SeismoSafe 地震模拟平台",
+            "home.desc": "互动式抗震设计教育平台",
             "home.sub": "地形上传、简易建筑模型、SAP2000 导出及风险评分。",
             "terrain.title": "我们的可持续抗震设计",
             "terrain.sub": "团队设计的抗震结构 — 可持续、尊重当地文化，采用低碳足迹材料建造。",

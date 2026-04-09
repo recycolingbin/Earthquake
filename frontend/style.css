@@ -1,11 +1,5 @@
 /* ─── Custom Font ─── */
-@font-face {
-  font-family: '04B30';
-  src: url('04B_30__.TTF') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
+/* Typewriter font loaded via Google Fonts (Special Elite) */
 
 .center {
   text-align: center;
@@ -19,7 +13,7 @@
   border: 1px solid #f5f5f5;
   background: linear-gradient(135deg, #ffffff, #d6d6d6);
   color: #0b0b0b;
-  font-family: '04B30', monospace;
+  font-family: 'Special Elite', monospace;
   font-weight: normal;
   font-size: 0.85rem;
   letter-spacing: 0.5px;
@@ -98,7 +92,7 @@ body {
   border: 1px solid transparent;
   background: transparent;
   color: #f5f5f5;
-  font-family: '04B30', monospace;
+  font-family: 'Special Elite', monospace;
   font-weight: normal;
   font-size: 0.85rem;
   text-decoration: none;
@@ -137,9 +131,11 @@ body {
   text-align: center;
   z-index: 2;
   pointer-events: none;
+  font-family: 'Special Elite', monospace;
 }
 
 .landing .home-panel * {
+  font-family: 'Special Elite', monospace;
   pointer-events: auto;
 }
 
@@ -1115,7 +1111,7 @@ body {
 }
 
 .landing .home-panel h2 {
-  font-family: '04B30', monospace;
+  font-family: 'Special Elite', monospace;
   font-size: clamp(2.4rem, 3vw + 1rem, 3.2rem);
   line-height: 1.1;
   letter-spacing: 1px;
@@ -3456,7 +3452,7 @@ html {
    Stat Value Polish
    ═══════════════════════════════════════════════════ */
 .collapse-stat-num {
-  font-family: '04B30', monospace;
+  font-family: 'Special Elite', monospace;
   font-size: 1.3rem;
   color: #e2e8f0;
 }
@@ -3501,7 +3497,7 @@ html {
 }
 
 .control-readout {
-  font-family: '04B30', monospace;
+  font-family: 'Special Elite', monospace;
   font-size: 0.85rem;
   color: #e2e8f0;
 }
@@ -4770,12 +4766,18 @@ main {
 .landing .home-panel.active {
   max-width: 700px;
   width: min(42vw, 560px);
-  margin: 0 0 0 clamp(6rem, 10vw, 11rem);
+  margin: 0;
+  position: fixed;
+  left: calc(clamp(6rem, 10vw, 11rem) - 25px);
+  top: calc(50% + 10px);
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  min-height: calc(100vh - 120px);
+  justify-content: flex-start;
+  min-height: auto;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
   text-align: left;
 }
 
