@@ -7,6 +7,7 @@
   <meta name="api-base" content="https://seismosafe-backend.onrender.com" />
   <meta name="ibl-env" content="" />
   <title>SeismoSafe</title>
+  <link rel="icon" type="image/png" href="logo.png" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="style.css" />
@@ -20,7 +21,8 @@
   <!-- ── Sidebar ── -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <span class="sidebar-logo">S</span>
+      <img src="logo.png" alt="SeismoSafe" class="sidebar-logo-img"
+        style="width:34px;height:34px;border-radius:10px;" />
       <span class="sidebar-title">SeismoSafe</span>
     </div>
     <nav class="sidebar-nav" id="primary-nav" aria-label="Page navigation">
@@ -136,10 +138,13 @@
           <div class="lang-en">
             <h4>Welcome to SeismoSafe</h4>
             <p>A civil-engineering earthquake simulation platform focused on the <strong>Tibet / Sichuan /
-                Nepal</strong> (Himalayan) region.</p>
+                Nepal</strong> (Himalayan) region. Our crew's design is <strong>sustainable</strong>, <strong>respectful
+                of local culture</strong>, and built with <strong>low carbon-footprint materials</strong> including
+              rammed earth, cross-laminated timber, and recycled steel.</p>
             <h4>Quick Start</h4>
             <ol>
-              <li><strong>Terrain</strong> — Upload a DEM file and set slope parameters for your site.</li>
+              <li><strong>Terrain</strong> — Explore our sustainable, culturally respectful 3D seismic design with
+                interactive cross-sections.</li>
               <li><strong>Building &amp; Risk</strong> — Define structural massing and run quick risk checks or export
                 SAP2000 files.</li>
               <li><strong>Models</strong> — Compare 5 structural systems (RC, Steel, Timber, Base Isolated, Hybrid)
@@ -154,10 +159,12 @@
           </div>
           <div class="lang-zh-TW" style="display:none">
             <h4>歡迎使用 SeismoSafe</h4>
-            <p>專注於<strong>西藏 / 四川 / 尼泊爾</strong>（喜馬拉雅）區域的土木工程地震模擬平台。</p>
+            <p>專注於<strong>西藏 / 四川 /
+                尼泊爾</strong>（喜馬拉雅）區域的土木工程地震模擬平台。我們團隊的設計強調<strong>永續</strong>、<strong>尊重當地文化</strong>，並採用夾土、交叉層壓材和回收鋼材等<strong>低碳足跡材料</strong>建造。
+            </p>
             <h4>快速開始</h4>
             <ol>
-              <li><strong>地形</strong> — 上傳 DEM 檔案並設定場址坡度參數。</li>
+              <li><strong>地形</strong> — 探索我們永續、尊重文化的 3D 抗震設計與互動剖面。</li>
               <li><strong>建築與風險</strong> — 定義結構量體並執行風險檢查或匯出 SAP2000。</li>
               <li><strong>模型</strong> — 比較 5 種結構系統在地震荷載下的表現。</li>
               <li><strong>倒塌實驗室</strong> — 觀看建築在 M8+ 震動下倒塌。</li>
@@ -168,10 +175,12 @@
           </div>
           <div class="lang-zh-CN" style="display:none">
             <h4>欢迎使用 SeismoSafe</h4>
-            <p>专注于<strong>西藏 / 四川 / 尼泊尔</strong>（喜马拉雅）区域的土木工程地震模拟平台。</p>
+            <p>专注于<strong>西藏 / 四川 /
+                尼泊尔</strong>（喜马拉雅）区域的土木工程地震模拟平台。我们团队的设计强调<strong>可持续</strong>、<strong>尊重当地文化</strong>，并采用夹土、交叉层压材和回收钢材等<strong>低碳足迹材料</strong>建造。
+            </p>
             <h4>快速开始</h4>
             <ol>
-              <li><strong>地形</strong> — 上传 DEM 文件并设定场址坡度参数。</li>
+              <li><strong>地形</strong> — 探索我们可持续、尊重文化的 3D 抗震设计与互动剖面。</li>
               <li><strong>建筑与风险</strong> — 定义结构体量并执行风险检查或导出 SAP2000。</li>
               <li><strong>模型</strong> — 比较 5 种结构系统在地震荷载下的表现。</li>
               <li><strong>倒塌实验室</strong> — 观看建筑在 M8+ 震动下倒塌。</li>
@@ -188,9 +197,9 @@
       <div class="section-header">
         <div class="pill" data-i18n="pill.step1">Step 1</div>
         <div>
-          <h2 data-i18n-title="terrain.title">3D Site Model</h2>
-          <p class="subtle" data-i18n-sub="terrain.sub">Explore the interactive 3D site model — orbit, pan, zoom,
-            and inspect building elements directly.</p>
+          <h2 data-i18n-title="terrain.title">Our Sustainable Seismic Design</h2>
+          <p class="subtle" data-i18n-sub="terrain.sub">A crew-designed earthquake-resilient structure — sustainable,
+            culturally respectful, and built with low carbon-footprint materials.</p>
         </div>
         <div class="pill pill-accent" data-i18n="pill.livePreview">Interactive</div>
       </div>
@@ -204,6 +213,34 @@
         <label style="color:#94a3b8;font-size:12px;">Opacity</label>
         <input type="range" id="terrain-opacity-slider" min="0" max="1" step="0.01" value="1" style="flex:1;" />
         <span id="terrain-opacity-val" style="color:#94a3b8;font-size:12px;min-width:36px;text-align:right;">100%</span>
+      </div>
+
+      <!-- Design Philosophy Info Cards -->
+      <div class="terrain-info-row" style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+        <div class="mini-card glow-card" style="flex:1;min-width:200px;padding:14px;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">🌿</div>
+          <h4 style="margin:0 0 4px;color:#a3e635;font-size:0.9rem;" data-i18n="terrain.sustainable">Sustainable Design
+          </h4>
+          <p style="margin:0;color:#94a3b8;font-size:0.8rem;line-height:1.4;" data-i18n="terrain.sustainableDesc">Our
+            crew's design prioritises environmental sustainability — minimising waste, optimising energy performance,
+            and integrating passive seismic resilience strategies.</p>
+        </div>
+        <div class="mini-card glow-card" style="flex:1;min-width:200px;padding:14px;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">🏛️</div>
+          <h4 style="margin:0 0 4px;color:#fbbf24;font-size:0.9rem;" data-i18n="terrain.culture">Respect for Local
+            Culture</h4>
+          <p style="margin:0;color:#94a3b8;font-size:0.8rem;line-height:1.4;" data-i18n="terrain.cultureDesc">Inspired
+            by Tibetan and Himalayan vernacular architecture — honouring traditional building forms, spatial layouts,
+            and community-centred design while meeting modern seismic codes.</p>
+        </div>
+        <div class="mini-card glow-card" style="flex:1;min-width:200px;padding:14px;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">♻️</div>
+          <h4 style="margin:0 0 4px;color:#22d3ee;font-size:0.9rem;" data-i18n="terrain.lowCarbon">Low Carbon Footprint
+          </h4>
+          <p style="margin:0;color:#94a3b8;font-size:0.8rem;line-height:1.4;" data-i18n="terrain.lowCarbonDesc">Built
+            with locally sourced rammed earth, cross-laminated timber, and recycled steel — reducing embodied carbon by
+            up to 60% compared to conventional reinforced concrete.</p>
+        </div>
       </div>
 
       <!-- Cross-section views -->
