@@ -159,6 +159,193 @@ let baseModel, baseModelBBox;
 
 // Keep relative so loaders don't prepend origin twice
 const MODEL_PATH = "Kumbum.gltf"; // GLTF model in the frontend/ folder
+const IBL_ENV_URL = document.querySelector('meta[name="ibl-env"]')?.content?.trim() || "";
+let previewEnvPromise;
+
+function configurePbrRenderer(r) {
+  if (!r || !window.THREE) return;
+
+  if ("outputColorSpace" in r && THREE.SRGBColorSpace) {
+    r.outputColorSpace = THREE.SRGBColorSpace;
+  } else if ("outputEncoding" in r && THREE.sRGBEncoding) {
+    r.outputEncoding = THREE.sRGBEncoding;
+  }
+
+  if ("toneMapping" in r && THREE.ACESFilmicToneMapping !== undefined) {
+    r.toneMapping = THREE.ACESFilmicToneMapping;
+  }
+  if ("toneMappingExposure" in r) {
+    r.toneMappingExposure = 1.0;
+  }
+}
+
+/* Scale down imported PointLight / SpotLight so Blender candela values
+   don't blow out the scene in the legacy Three.js light pipeline.      */
+function tameImportedLights(root) {
+  if (!root) return;
+  root.traverse(function (child) {
+    if (child.isPointLight || child.isSpotLight) {
+      child.intensity = Math.min(child.intensity / 100, 2);
+      child.distance = child.distance || 50;
+      child.decay = 2;
+    }
+  });
+}
+
+function tuneGltfMaterials(root, activeRenderer) {
+  if (!root || !window.THREE) return;
+
+  const maxAniso = activeRenderer?.capabilities?.getMaxAnisotropy
+    ? activeRenderer.capabilities.getMaxAnisotropy()
+    : 1;
+
+  const markColorTexture = (tx) => {
+    if (!tx) return;
+    if ("colorSpace" in tx && THREE.SRGBColorSpace) {
+      tx.colorSpace = THREE.SRGBColorSpace;
+    } else if ("encoding" in tx && THREE.sRGBEncoding) {
+      tx.encoding = THREE.sRGBEncoding;
+    }
+    if ("anisotropy" in tx) tx.anisotropy = Math.min(8, maxAniso);
+    tx.needsUpdate = true;
+  };
+
+  const tuneTexture = (tx) => {
+    if (!tx) return;
+    if ("anisotropy" in tx) tx.anisotropy = Math.min(8, maxAniso);
+    tx.needsUpdate = true;
+  };
+
+  root.traverse((child) => {
+    if (!child.isMesh || !child.material) return;
+
+    const mats = Array.isArray(child.material) ? child.material : [child.material];
+    mats.forEach((mat) => {
+      if (!mat) return;
+      markColorTexture(mat.map);
+      markColorTexture(mat.emissiveMap);
+
+      tuneTexture(mat.normalMap);
+      tuneTexture(mat.roughnessMap);
+      tuneTexture(mat.metalnessMap);
+      tuneTexture(mat.aoMap);
+
+      mat.needsUpdate = true;
+    });
+  });
+}
+
+function loadScriptOnce(src, id) {
+  const existing = id ? document.getElementById(id) : null;
+  if (existing) {
+    if (existing.dataset.loaded === "1") return Promise.resolve(true);
+    existing.remove();
+  }
+
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    if (id) s.id = id;
+    s.src = src;
+    s.async = true;
+    s.onload = () => {
+      s.dataset.loaded = "1";
+      resolve(true);
+    };
+    s.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(s);
+  });
+}
+
+async function ensureRgbeloader() {
+  if (!window.THREE) return false;
+  if (THREE.RGBELoader) return true;
+
+  if (window.__seismosafeRgbeloaderPromise) {
+    return window.__seismosafeRgbeloaderPromise;
+  }
+
+  const rev = String(THREE.REVISION || "");
+  const version = /^\d+$/.test(rev) ? `0.${rev}.0` : "0.160.0";
+  const sources = [
+    `https://cdn.jsdelivr.net/npm/three@${version}/examples/js/loaders/RGBELoader.js`,
+    `https://unpkg.com/three@${version}/examples/js/loaders/RGBELoader.js`,
+  ];
+
+  window.__seismosafeRgbeloaderPromise = (async () => {
+    for (const src of sources) {
+      try {
+        await loadScriptOnce(src, "three-rgbe-loader");
+        if (THREE.RGBELoader) return true;
+      } catch (err) {
+        console.warn("[IBL] RGBELoader source failed:", src, err?.message || err);
+      }
+    }
+    return !!THREE.RGBELoader;
+  })();
+
+  return window.__seismosafeRgbeloaderPromise;
+}
+
+function applyEnvironmentMap(targetScene, activeRenderer, texture) {
+  if (!targetScene || !activeRenderer || !texture || !window.THREE || !THREE.PMREMGenerator) return false;
+
+  const pmrem = new THREE.PMREMGenerator(activeRenderer);
+  if (pmrem.compileEquirectangularShader) pmrem.compileEquirectangularShader();
+  const envRT = pmrem.fromEquirectangular(texture);
+  targetScene.environment = envRT.texture;
+  pmrem.dispose();
+  if (texture.dispose) texture.dispose();
+  return true;
+}
+
+function loadSceneEnvironment(targetScene, activeRenderer) {
+  if (!IBL_ENV_URL || !targetScene || !activeRenderer || !window.THREE) {
+    return Promise.resolve(false);
+  }
+
+  if (previewEnvPromise) return previewEnvPromise;
+
+  const path = IBL_ENV_URL.split("?")[0].toLowerCase();
+  const isHdr = path.endsWith(".hdr") || path.endsWith(".rgbe");
+
+  previewEnvPromise = new Promise((resolve) => {
+    const onError = (err) => {
+      console.warn("[IBL] Environment map load failed:", err?.message || err);
+      resolve(false);
+    };
+
+    if (isHdr) {
+      ensureRgbeloader()
+        .then((ok) => {
+          if (!ok || !THREE.RGBELoader) {
+            onError(new Error("RGBELoader unavailable"));
+            return;
+          }
+
+          new THREE.RGBELoader().load(
+            IBL_ENV_URL,
+            (hdrTexture) => resolve(applyEnvironmentMap(targetScene, activeRenderer, hdrTexture)),
+            undefined,
+            onError
+          );
+        })
+        .catch(onError);
+      return;
+    }
+
+    new THREE.TextureLoader().load(
+      IBL_ENV_URL,
+      (texture) => {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        resolve(applyEnvironmentMap(targetScene, activeRenderer, texture));
+      },
+      undefined,
+      onError
+    );
+  });
+
+  return previewEnvPromise;
+}
 
 // Background visualizer globals
 let bgScene, bgCamera, bgRenderer, bgGroup, bgAnimationId;
@@ -488,6 +675,7 @@ function initThree() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(width, height);
+  configurePbrRenderer(renderer);
   previewCanvas.appendChild(renderer.domElement);
 
   previewResize = () => {
@@ -504,17 +692,29 @@ function initThree() {
   controls.target.set(0, 4, 0);
   controls.update();
 
-  hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.7);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+
+  hemiLight = new THREE.HemisphereLight(0xffffff, 0x202b3e, 1.0);
   hemiLight.position.set(0, 20, 0);
   scene.add(hemiLight);
 
-  dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
   dirLight.position.set(10, 20, 10);
+  dirLight.castShadow = true;
   scene.add(dirLight);
+
+  const rimLight = new THREE.DirectionalLight(0xaec6ff, 0.8);
+  rimLight.position.set(-14, 10, -10);
+  scene.add(rimLight);
 
   const grid = new THREE.GridHelper(30, 15, 0x334155, 0x1f2937);
   grid.position.y = 0;
   scene.add(grid);
+
+  loadSceneEnvironment(scene, renderer).then((ok) => {
+    if (ok) console.info("[IBL] Environment map enabled for main preview");
+  });
+
   startPreviewRender();
 }
 
@@ -553,6 +753,8 @@ function updatePreview(payload) {
         }
       }
     });
+    tuneGltfMaterials(clone, renderer);
+    tameImportedLights(clone);
 
     const box = baseModelBBox || new THREE.Box3().setFromObject(clone);
     const size = box.getSize(new THREE.Vector3(1, 1, 1));
@@ -621,6 +823,8 @@ function updatePreview(payload) {
             }
           }
         });
+        tuneGltfMaterials(baseModel, renderer);
+        tameImportedLights(baseModel);
 
         console.info("[GLTF] Model loaded", { bbox: baseModelBBox.getSize(new THREE.Vector3()) });
         placeModel();

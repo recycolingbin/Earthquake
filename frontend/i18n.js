@@ -14,8 +14,8 @@
 
             /* ── Section titles / subtitles (data-i18n-title / data-i18n-sub) ── */
             "home.title": "SeismoSafe",
-            "terrain.title": "Terrain + live 3D base",
-            "terrain.sub": "Upload your DEM/DXF, set a slope hint, and watch the building sit on the ground plane instantly.",
+            "terrain.title": "Our Seismic Design",
+            "terrain.sub": "Design with balanced risk and sustainability.",
             "models.title": "Model Comparison",
             "models.sub": "Select a building model, inspect its 3D form, review performance metrics, and adjust variables for real-time earthquake simulation.",
             "collapse.title": "Collapse Simulation",

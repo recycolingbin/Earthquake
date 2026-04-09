@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="api-base" content="https://seismosafe-backend.onrender.com" />
+  <meta name="ibl-env" content="" />
   <title>SeismoSafe</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -197,6 +198,42 @@
       <div class="terrain-viewer-wrap" id="terrain-viewer-wrap">
         <canvas id="terrain-canvas"></canvas>
         <div id="terrain-loading" class="terrain-loading">Loading 3D model…</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+        <label style="color:#94a3b8;font-size:12px;">Opacity</label>
+        <input type="range" id="terrain-opacity-slider" min="0" max="1" step="0.01" value="1" style="flex:1;" />
+        <span id="terrain-opacity-val" style="color:#94a3b8;font-size:12px;min-width:36px;text-align:right;">100%</span>
+      </div>
+
+      <!-- Cross-section views -->
+      <div class="section-views-row" style="display:flex;gap:12px;margin-top:12px;">
+        <div class="mini-card glow-card" style="flex:1;padding:12px;">
+          <div class="card-header-row" style="margin-bottom:8px;">
+            <div class="pill pill-ghost" data-i18n="terrain.sectionX">Section X</div>
+            <span class="eyebrow">Cut perpendicular to X axis</span>
+          </div>
+          <canvas id="section-x-canvas"
+            style="width:100%;height:300px;border-radius:8px;background:#0d0d0d;display:block;"></canvas>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+            <label style="color:#94a3b8;font-size:12px;">Clip&nbsp;X</label>
+            <input type="range" id="section-x-slider" style="flex:1;" />
+            <span id="section-x-val" style="color:#94a3b8;font-size:12px;min-width:40px;text-align:right;">0</span>
+          </div>
+        </div>
+        <div class="mini-card glow-card" style="flex:1;padding:12px;">
+          <div class="card-header-row" style="margin-bottom:8px;">
+            <div class="pill pill-ghost" data-i18n="terrain.sectionY">Section Y</div>
+            <span class="eyebrow">Cut perpendicular to Y axis</span>
+          </div>
+          <canvas id="section-y-canvas"
+            style="width:100%;height:300px;border-radius:8px;background:#0d0d0d;display:block;"></canvas>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+            <label style="color:#94a3b8;font-size:12px;">Clip&nbsp;Y</label>
+            <input type="range" id="section-y-slider" style="flex:1;" />
+            <span id="section-y-val" style="color:#94a3b8;font-size:12px;min-width:40px;text-align:right;">0</span>
+          </div>
+        </div>
       </div>
     </section>
 

@@ -80,6 +80,197 @@
     /* progressive collapse */
     var collapseWaveY = 999;   /* current Y level of the collapse wave (sweeps downward) */
     var collapseWaveSpeed = 0; /* units/sec the wave descends */
+    var IBL_ENV_URL = (document.querySelector('meta[name="ibl-env"]') || {}).content || "";
+    IBL_ENV_URL = (IBL_ENV_URL || "").trim();
+    var collapseEnvPromise = null;
+
+    function configurePbrRenderer(r) {
+        if (!r || !window.THREE) return;
+
+        if ("outputColorSpace" in r && THREE.SRGBColorSpace) {
+            r.outputColorSpace = THREE.SRGBColorSpace;
+        } else if ("outputEncoding" in r && THREE.sRGBEncoding) {
+            r.outputEncoding = THREE.sRGBEncoding;
+        }
+
+        if ("toneMapping" in r && THREE.ACESFilmicToneMapping !== undefined) {
+            r.toneMapping = THREE.ACESFilmicToneMapping;
+        }
+        if ("toneMappingExposure" in r) {
+            r.toneMappingExposure = 1.0;
+        }
+    }
+
+    /* Scale down imported PointLight / SpotLight so Blender candela values
+       don't blow out the scene in the legacy Three.js light pipeline.      */
+    function tameImportedLights(root) {
+        if (!root) return;
+        root.traverse(function (child) {
+            if (child.isPointLight || child.isSpotLight) {
+                child.intensity = Math.min(child.intensity / 100, 2);
+                child.distance = child.distance || 50;
+                child.decay = 2;
+            }
+        });
+    }
+
+    function tuneGltfMaterials(root) {
+        if (!root || !window.THREE || !renderer) return;
+
+        var maxAniso = renderer.capabilities && renderer.capabilities.getMaxAnisotropy
+            ? renderer.capabilities.getMaxAnisotropy()
+            : 1;
+
+        function markColorTexture(tx) {
+            if (!tx) return;
+            if ("colorSpace" in tx && THREE.SRGBColorSpace) {
+                tx.colorSpace = THREE.SRGBColorSpace;
+            } else if ("encoding" in tx && THREE.sRGBEncoding) {
+                tx.encoding = THREE.sRGBEncoding;
+            }
+            if ("anisotropy" in tx) tx.anisotropy = Math.min(8, maxAniso);
+            tx.needsUpdate = true;
+        }
+
+        function tuneTexture(tx) {
+            if (!tx) return;
+            if ("anisotropy" in tx) tx.anisotropy = Math.min(8, maxAniso);
+            tx.needsUpdate = true;
+        }
+
+        root.traverse(function (child) {
+            if (!child.isMesh || !child.material) return;
+
+            var mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach(function (mat) {
+                if (!mat) return;
+
+                markColorTexture(mat.map);
+                markColorTexture(mat.emissiveMap);
+
+                tuneTexture(mat.normalMap);
+                tuneTexture(mat.roughnessMap);
+                tuneTexture(mat.metalnessMap);
+                tuneTexture(mat.aoMap);
+
+                mat.needsUpdate = true;
+            });
+        });
+    }
+
+    function loadScriptOnce(src, id) {
+        var existing = id ? document.getElementById(id) : null;
+        if (existing) {
+            if (existing.dataset.loaded === "1") return Promise.resolve(true);
+            existing.remove();
+        }
+
+        return new Promise(function (resolve, reject) {
+            var s = document.createElement("script");
+            if (id) s.id = id;
+            s.src = src;
+            s.async = true;
+            s.onload = function () {
+                s.dataset.loaded = "1";
+                resolve(true);
+            };
+            s.onerror = function () { reject(new Error("Failed to load " + src)); };
+            document.head.appendChild(s);
+        });
+    }
+
+    function ensureRgbeloader() {
+        if (!window.THREE) return Promise.resolve(false);
+        if (THREE.RGBELoader) return Promise.resolve(true);
+
+        if (window.__seismosafeRgbeloaderPromise) {
+            return window.__seismosafeRgbeloaderPromise;
+        }
+
+        var rev = String(THREE.REVISION || "");
+        var version = /^\d+$/.test(rev) ? "0." + rev + ".0" : "0.160.0";
+        var sources = [
+            "https://cdn.jsdelivr.net/npm/three@" + version + "/examples/js/loaders/RGBELoader.js",
+            "https://unpkg.com/three@" + version + "/examples/js/loaders/RGBELoader.js",
+        ];
+
+        window.__seismosafeRgbeloaderPromise = (async function () {
+            for (var i = 0; i < sources.length; i++) {
+                var src = sources[i];
+                try {
+                    await loadScriptOnce(src, "three-rgbe-loader");
+                    if (THREE.RGBELoader) return true;
+                } catch (err) {
+                    console.warn("[IBL] RGBELoader source failed:", src, (err && err.message) || err);
+                }
+            }
+            return !!THREE.RGBELoader;
+        })();
+
+        return window.__seismosafeRgbeloaderPromise;
+    }
+
+    function applyEnvironmentMap(targetScene, activeRenderer, texture) {
+        if (!targetScene || !activeRenderer || !texture || !window.THREE || !THREE.PMREMGenerator) return false;
+
+        var pmrem = new THREE.PMREMGenerator(activeRenderer);
+        if (pmrem.compileEquirectangularShader) pmrem.compileEquirectangularShader();
+        var envRT = pmrem.fromEquirectangular(texture);
+        targetScene.environment = envRT.texture;
+        pmrem.dispose();
+        if (texture.dispose) texture.dispose();
+        return true;
+    }
+
+    function loadSceneEnvironment(targetScene, activeRenderer) {
+        if (!IBL_ENV_URL || !targetScene || !activeRenderer || !window.THREE) {
+            return Promise.resolve(false);
+        }
+        if (collapseEnvPromise) return collapseEnvPromise;
+
+        var path = IBL_ENV_URL.split("?")[0].toLowerCase();
+        var isHdr = path.endsWith(".hdr") || path.endsWith(".rgbe");
+
+        collapseEnvPromise = new Promise(function (resolve) {
+            var onError = function (err) {
+                console.warn("[IBL] Environment map load failed:", (err && err.message) || err);
+                resolve(false);
+            };
+
+            if (isHdr) {
+                ensureRgbeloader()
+                    .then(function (ok) {
+                        if (!ok || !THREE.RGBELoader) {
+                            onError(new Error("RGBELoader unavailable"));
+                            return;
+                        }
+
+                        new THREE.RGBELoader().load(
+                            IBL_ENV_URL,
+                            function (hdrTexture) {
+                                resolve(applyEnvironmentMap(targetScene, activeRenderer, hdrTexture));
+                            },
+                            undefined,
+                            onError
+                        );
+                    })
+                    .catch(onError);
+                return;
+            }
+
+            new THREE.TextureLoader().load(
+                IBL_ENV_URL,
+                function (texture) {
+                    texture.mapping = THREE.EquirectangularReflectionMapping;
+                    resolve(applyEnvironmentMap(targetScene, activeRenderer, texture));
+                },
+                undefined,
+                onError
+            );
+        });
+
+        return collapseEnvPromise;
+    }
 
     /* ═══════════════════════════════════════════════════
        Scene setup
@@ -103,19 +294,21 @@
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(w, h);
         renderer.shadowMap.enabled = true;
+        configurePbrRenderer(renderer);
 
         controls = new THREE.OrbitControls(camera, canvas);
         controls.enableDamping = true;
         controls.target.set(0, 4, 0);
         controls.update();
 
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.9));
-        var dir = new THREE.DirectionalLight(0xffffff, 1.2);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x202b3e, 1.0));
+        var dir = new THREE.DirectionalLight(0xffffff, 2.0);
         dir.position.set(10, 25, 12);
         dir.castShadow = true;
         dir.shadow.mapSize.set(1024, 1024);
         scene.add(dir);
-        var fill = new THREE.DirectionalLight(0x8899bb, 0.4);
+        var fill = new THREE.DirectionalLight(0x8899bb, 0.7);
         fill.position.set(-10, 15, -10);
         scene.add(fill);
 
@@ -127,6 +320,10 @@
         scene.add(groundMesh);
 
         scene.add(new THREE.GridHelper(60, 30, 0x334155, 0x1f2937));
+
+        loadSceneEnvironment(scene, renderer).then(function (ok) {
+            if (ok) console.info("[IBL] Environment map enabled for collapse viewer");
+        });
 
         window.addEventListener("resize", onResize);
         tick();
@@ -311,6 +508,8 @@
         var onLoad = function (gltf) {
             console.info('[Collapse] GLB loaded, processing...');
             var root = gltf.scene;
+            tuneGltfMaterials(root);
+            tameImportedLights(root);
 
             /* --- Preserve original GLB materials, store orig color for heatmap reset --- */
             var meshCount = 0;
