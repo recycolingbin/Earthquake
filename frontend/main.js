@@ -897,6 +897,7 @@ function wireTabs() {
     }
 
     if (name === "terrain") {
+      if (typeof window.initTerrainTab === "function") setTimeout(function () { window.initTerrainTab(); }, 80);
       if (typeof initThree === "function") initThree();
       if (typeof collectPayload === "function") updatePreview(collectPayload());
     }

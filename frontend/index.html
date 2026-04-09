@@ -187,96 +187,16 @@
       <div class="section-header">
         <div class="pill" data-i18n="pill.step1">Step 1</div>
         <div>
-          <h2 data-i18n-title="terrain.title">Terrain + live 3D base</h2>
-          <p class="subtle" data-i18n-sub="terrain.sub">Upload your DEM/DXF, set a slope hint, and watch the building
-            sit on the ground plane
-            instantly.</p>
+          <h2 data-i18n-title="terrain.title">3D Site Model</h2>
+          <p class="subtle" data-i18n-sub="terrain.sub">Explore the interactive 3D site model — orbit, pan, zoom,
+            and inspect building elements directly.</p>
         </div>
-        <div class="pill pill-accent" data-i18n="pill.livePreview">Live preview</div>
+        <div class="pill pill-accent" data-i18n="pill.livePreview">Interactive</div>
       </div>
 
-      <div class="terrain-grid">
-        <div class="mini-card">
-          <div class="card-header-row">
-            <div class="pill pill-ghost" data-i18n="terrain.upload">Upload</div>
-            <span class="eyebrow" data-i18n="terrain.factor">Terrain factor</span>
-          </div>
-          <h3 data-i18n="terrain.demTitle">DEM / terrain file</h3>
-          <p class="subtle" data-i18n="terrain.demDesc">Drag a GeoTIFF/DEM file (.tif/.tiff) and we'll derive a slope
-            factor.</p>
-
-          <!-- Drop Zone -->
-          <div id="dem-dropzone" class="dropzone">
-            <div class="dropzone-content">
-              <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-              <p class="dropzone-text" data-i18n="terrain.dropText">Drag & drop GeoTIFF here</p>
-              <p class="dropzone-hint" data-i18n="terrain.dropHint">or click to browse (.tif / .tiff only)</p>
-            </div>
-            <input type="file" id="terrain-file" accept=".tif,.tiff" hidden />
-          </div>
-          <div id="dem-file-info" class="file-info" style="display: none;">
-            <span class="file-name"></span>
-            <button type="button" class="file-remove" title="Remove file">&times;</button>
-          </div>
-          <div id="dem-error" class="dropzone-error" style="display: none;"></div>
-
-          <form id="terrain-form" class="stacked-form">
-            <label><span data-i18n="terrain.slopeHint">Slope hint (degrees)</span>
-              <input type="number" id="slope-hint" value="8" step="0.1" />
-            </label>
-            <button type="submit" data-i18n="btn.upload">Upload & compute slope factor</button>
-          </form>
-
-          <div id="slope-result" class="slope-result" style="display: none;">
-            <div class="slope-value">
-              <span class="slope-label" data-i18n="terrain.derivedSlope">Derived Slope:</span>
-              <span class="slope-degrees">--</span>
-            </div>
-            <div class="slope-bar">
-              <div class="slope-bar-fill"></div>
-            </div>
-            <span class="slope-category"></span>
-          </div>
-
-          <div class="hint-row">
-            <span class="dot dot-blue"></span> <span data-i18n="terrain.gentle">Gentle = 0–10°</span>
-            <span class="dot dot-amber"></span> <span data-i18n="terrain.medium">Medium = 10–20°</span>
-            <span class="dot dot-red"></span> <span data-i18n="terrain.steep">Steep &gt; 20°</span>
-          </div>
-        </div>
-
-        <div class="mini-card" id="terrain-3d-block">
-          <div class="card-header-row">
-            <div class="pill pill-ghost" data-i18n="terrain.3dMassing">3D massing</div>
-            <span class="eyebrow" data-i18n="terrain.boxOnSlope">Box on sloped ground</span>
-          </div>
-          <div id="preview-container">
-            <div id="preview-canvas"></div>
-            <div id="preview-status" aria-live="polite"></div>
-          </div>
-          <div class="legend">
-            <span><span class="legend-dot blue"></span><span data-i18n="terrain.groundPlane">Ground plane
-                (slope)</span></span>
-            <span><span class="legend-dot orange"></span><span data-i18n="terrain.buildingMass">Building
-                mass</span></span>
-          </div>
-          <p class="microcopy" data-i18n="terrain.microcopy">Use the Building tab to tweak bays, stories, and story
-            height—preview refreshes live.</p>
-        </div>
-
-
-      </div>
-
-      <div class="result-card">
-        <div class="card-header-row">
-          <div class="pill pill-ghost" data-i18n="terrain.readout">Read-out</div>
-          <span class="eyebrow" data-i18n="terrain.backend">Backend response</span>
-        </div>
-        <pre id="terrain-result" class="result"></pre>
+      <div class="terrain-viewer-wrap" id="terrain-viewer-wrap">
+        <canvas id="terrain-canvas"></canvas>
+        <div id="terrain-loading" class="terrain-loading">Loading 3D model…</div>
       </div>
     </section>
 
@@ -1668,6 +1588,7 @@
   <script src="lib/OrbitControls.js"></script>
   <script src="lib/DRACOLoader.js"></script>
   <script src="lib/GLTFLoader.js"></script>
+  <script src="terrain.js"></script>
   <script src="models.js"></script>
   <script src="collapse.js"></script>
   <script src="waves.js"></script>
