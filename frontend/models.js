@@ -65,6 +65,15 @@
     let simHistoryCount = 6;
     let inited = false;
 
+    const TIMBER_PRESET = {
+        magnitude: 10.0,
+        pga: 1.5,
+        soil: 2.0,
+        stories: 5,
+        duration: 15,
+        damping: 0.01,
+    };
+
     let seismoCanvas, seismoCtx;
     let seismoData = [];
     const SEISMO_MAX = 300;
@@ -615,6 +624,32 @@
         drawDriftDiagram();
     }
 
+    function setSimControl(id, value, decimals) {
+        var input = el(id);
+        if (!input) return;
+        input.value = String(value);
+        var readout = el(id + "-val");
+        if (readout) {
+            readout.textContent = (typeof decimals === "number") ? Number(value).toFixed(decimals) : String(value);
+        }
+    }
+
+    function applyTimberPreset() {
+        simMagnitude = TIMBER_PRESET.magnitude;
+        simPga = TIMBER_PRESET.pga;
+        simSoil = TIMBER_PRESET.soil;
+        simStories = TIMBER_PRESET.stories;
+        simDuration = TIMBER_PRESET.duration;
+        simDamping = TIMBER_PRESET.damping;
+
+        setSimControl("sim-magnitude", simMagnitude, 2);
+        setSimControl("sim-pga", simPga, 2);
+        setSimControl("sim-soil", simSoil, 2);
+        setSimControl("sim-stories", simStories);
+        setSimControl("sim-duration", simDuration);
+        setSimControl("sim-damping", simDamping, 2);
+    }
+
     /* ═══════════════════════════════════════════════════
        Wire controls
        ═══════════════════════════════════════════════════ */
@@ -624,6 +659,9 @@
                 document.querySelectorAll(".model-tab").forEach(function (b) { b.classList.remove("active"); });
                 btn.classList.add("active");
                 currentModelIdx = parseInt(btn.dataset.model, 10);
+                if (currentModelIdx === 2) {
+                    applyTimberPreset();
+                }
                 updateInfo(currentModelIdx);
                 buildModel(currentModelIdx);
                 buildComparison();
