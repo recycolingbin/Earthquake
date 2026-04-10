@@ -47,11 +47,11 @@
         return {
             name: ($("des-name") || {}).value || "My Building",
             floors: parseInt(($("des-floors") || {}).value, 10) || 8,
-            floorH: parseFloat(($("des-floor-h") || {}).value) || 3.2,
+            floorH: parseFloat(($("des-floor-h") || {}).value) || 5,
             width: parseFloat(($("des-width") || {}).value) || 20,
             depth: parseFloat(($("des-depth") || {}).value) || 15,
-            shape: ($("des-shape") || {}).value || "rectangular",
-            material: ($("des-material") || {}).value || "rc",
+            shape: ($("des-shape") || {}).value || "u-shape",
+            material: ($("des-material") || {}).value || "timber",
             foundation: ($("des-foundation") || {}).value || "shallow",
             lateral: ($("des-lateral") || {}).value || "moment-frame",
             code: ($("des-code") || {}).value || "ibc"

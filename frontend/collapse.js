@@ -42,8 +42,8 @@
     var pieces = [];
     var pieceData = [];
     var groundMesh = null;
-    var magnitude = 6.0;
-    var duration = 18;
+    var magnitude = 8.0;
+    var duration = 10;
     var crackHeight = 0.45;
     var simRunning = false;
     var simElapsed = 0;

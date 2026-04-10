@@ -12,9 +12,9 @@
     var inited = false;
 
     /* params */
-    var magnitude = 6.0;
-    var depth = 30;
-    var distance = 100;
+    var magnitude = 4.0;
+    var depth = 1;
+    var distance = 45;
     var soil = "stiff";
 
     /* wave speeds (km/s) */
